@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  videos        Video[]
+  templates     Template[]
+
+  @@map("users")
+}
+
+model Video {
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
+  videoUrl      String
+  thumbnailUrl  String?
+  captionStyle  String?   // Optional field as requested
+  tags          String?   // Optional field as requested
+  duration      Int?
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  templateId    String?
+  template      Template? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("videos")
+}
+
+model Template {
+  id            String    @id @default(cuid())
+  name          String
+  description   String?
+  thumbnailUrl  String?
+  captionStyle  String?   // Optional field as requested
+  tags          String?   // Optional field as requested
+  config        Json      // Store template configuration as JSON
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videos        Video[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("templates")
+}
