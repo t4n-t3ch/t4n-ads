@@ -3,11 +3,11 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   experimental: {
-    appDir: true,
+    // Remove 'appDir' from experimental block
   },
   images: {
     domains: [],
   },
-}
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;
