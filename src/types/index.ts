@@ -2,7 +2,7 @@ export enum VideoStatus {
   DRAFT = "draft",
   PROCESSING = "processing",
   COMPLETED = "completed",
-  FAILED = "failed",
+  FAILED = "failed"
 }
 
 export interface User {
@@ -23,15 +23,17 @@ export interface Video {
   prompt: string;
   aspectRatio: string;
   duration: number;
-  style: string;
+  style?: string;
   status: VideoStatus;
-  progress: number;
+  progress?: number;
   videoUrl?: string;
   thumbnailUrl?: string;
+  jobId?: string;
   errorMessage?: string;
   metadata?: Record<string, any>;
   createdAt: Date;
   updatedAt: Date;
+  completedAt?: Date;
 }
 
 export interface Template {
@@ -40,21 +42,23 @@ export interface Template {
   description: string;
   category: string;
   tags: string[];
-  previewUrl: string;
+  promptExample: string;
   aspectRatio: string;
   duration: number;
   style: string;
-  promptExample: string;
+  thumbnailUrl?: string;
+  previewUrl?: string;
   isPublic: boolean;
+  creditsRequired: number;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export interface GenerateRequest {
   prompt: string;
-  aspectRatio: string;
+  aspectRatio: "16:9" | "9:16" | "1:1";
   duration: number;
-  style: string;
+  style?: string;
   templateId?: string;
 }
 
@@ -63,6 +67,29 @@ export interface ApiResponse<T = any> {
   data?: T;
   error?: string;
   message?: string;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  name?: string;
+  avatarUrl?: string;
+  credits: number;
+  totalVideos: number;
+  completedVideos: number;
+  processingVideos: number;
+  storageUsed: number; // in MB
+}
+
+export interface VideoGenerationJob {
+  id: string;
+  videoId: string;
+  status: VideoStatus;
+  progress: number;
+  videoUrl?: string;
+  estimatedTimeRemaining?: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface CreditTransaction {
@@ -75,19 +102,45 @@ export interface CreditTransaction {
   createdAt: Date;
 }
 
-export interface StripeWebhookEvent {
+export interface PricingTier {
   id: string;
-  type: string;
-  data: {
-    object: any;
-  };
+  name: string;
+  price: number;
+  pricePeriod: "month" | "year";
+  credits: number;
+  features: string[];
+  highlighted?: boolean;
+  maxDuration: number;
+  maxResolution: string;
+  branding: boolean;
+  prioritySupport: boolean;
 }
 
 export interface AdminStats {
   totalUsers: number;
   totalVideos: number;
   totalCreditsPurchased: number;
-  revenue: number;
+  totalRevenue: number;
   activeUsers: number;
-  processingVideos: number;
+  videosByStatus: Record<VideoStatus, number>;
+  recentSignups: User[];
+  recentVideos: Video[];
+}
+
+export interface GalleryFilters {
+  status?: VideoStatus;
+  aspectRatio?: string;
+  dateFrom?: Date;
+  dateTo?: Date;
+  search?: string;
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
 }
