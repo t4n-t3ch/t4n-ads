@@ -3,58 +3,118 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/hooks/useAuth'
+import { useCredits } from '@/hooks/useCredits'
+import ProgressBar from '@/components/ProgressBar'
+import StatusBadge from '@/components/StatusBadge'
 import { VideoStatus } from '@/types'
 
 const PROMPT_SUGGESTIONS = [
-  "Create a 15-second ad for a new eco-friendly water bottle that highlights durability and sustainability",
-  "Generate a 30-second animated explainer video for a budgeting app with clean, modern visuals",
-  "Make a 10-second Instagram story ad for a coffee subscription service with energetic music",
-  "Produce a 45-second brand story video for a handmade skincare line with calming nature shots",
-  "Create a 20-second TikTok-style ad for a fitness app showing quick workout transformations"
+  "Create a 15-second ad for a new eco-friendly water bottle that highlights sustainability and modern design",
+  "Generate a 30-second promotional video for a fitness app showing workout tracking and progress analytics",
+  "Make a 10-second social media ad for a coffee shop with cozy atmosphere and artisanal brews",
+  "Produce a 45-second explainer video for a project management tool with team collaboration features",
+  "Create a 20-second fashion brand ad showcasing summer collection with vibrant colors and urban settings"
 ]
 
-const STYLE_OPTIONS = [
+const ASPECT_RATIOS = [
+  { value: '16:9', label: 'Landscape (16:9)', width: 320, height: 180 },
+  { value: '9:16', label: 'Portrait (9:16)', width: 180, height: 320 },
+  { value: '1:1', label: 'Square (1:1)', width: 240, height: 240 }
+]
+
+const STYLES = [
   { id: 'cinematic', label: 'Cinematic', description: 'Film-like quality with dramatic lighting' },
-  { id: 'animated', label: 'Animated', description: 'Motion graphics and smooth animations' },
-  { id: 'minimal', label: 'Minimal', description: 'Clean, simple design with ample white space' },
-  { id: 'bold', label: 'Bold', description: 'Vibrant colors and dynamic transitions' }
-]
-
-const ASPECT_RATIO_OPTIONS = [
-  { id: '16:9', label: '16:9', description: 'Widescreen (YouTube, TV)', icon: '▭' },
-  { id: '9:16', label: '9:16', description: 'Vertical (TikTok, Stories)', icon: '▯' },
-  { id: '1:1', label: '1:1', description: 'Square (Instagram)', icon: '▢' }
+  { id: 'animated', label: 'Animated', description: 'Motion graphics and dynamic transitions' },
+  { id: 'minimal', label: 'Minimal', description: 'Clean, simple design with focus on content' },
+  { id: 'bold', label: 'Bold', description: 'Vibrant colors and strong typography' }
 ]
 
 export default function GeneratePage() {
   const router = useRouter()
+  const { user, loading: authLoading } = useAuth()
+  const { credits, refreshCredits } = useCredits()
+  
   const [prompt, setPrompt] = useState('')
-  const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16' | '1:1'>('16:9')
+  const [selectedAspectRatio, setSelectedAspectRatio] = useState('16:9')
   const [duration, setDuration] = useState(15)
-  const [style, setStyle] = useState('cinematic')
+  const [selectedStyle, setSelectedStyle] = useState('cinematic')
   const [isGenerating, setIsGenerating] = useState(false)
-  const [generationId, setGenerationId] = useState<string | null>(null)
+  const [generationStatus, setGenerationStatus] = useState<VideoStatus | null>(null)
   const [progress, setProgress] = useState(0)
-  const [status, setStatus] = useState<VideoStatus>('draft')
+  const [videoId, setVideoId] = useState<string | null>(null)
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null)
 
-  const handleSuggestionClick = (suggestion: string) => {
-    setPrompt(suggestion)
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login')
+    }
+  }, [user, authLoading, router])
+
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval)
+      }
+    }
+  }, [pollingInterval])
+
+  const startPolling = (id: string) => {
+    if (pollingInterval) {
+      clearInterval(pollingInterval)
+    }
+
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/generate/status/${id}`)
+        const data = await response.json()
+        
+        if (data.success) {
+          setGenerationStatus(data.video.status)
+          setProgress(data.video.progress || 0)
+          
+          if (data.video.status === 'completed' && data.video.videoUrl) {
+            setVideoUrl(data.video.videoUrl)
+            setIsGenerating(false)
+            clearInterval(interval)
+            refreshCredits()
+          } else if (data.video.status === 'failed') {
+            setError('Video generation failed. Please try again.')
+            setIsGenerating(false)
+            clearInterval(interval)
+          }
+        }
+      } catch (err) {
+        console.error('Error polling status:', err)
+      }
+    }, 2000)
+
+    setPollingInterval(interval)
   }
 
   const handleGenerate = async () => {
+    if (!user) {
+      router.push('/login')
+      return
+    }
+
     if (!prompt.trim()) {
       setError('Please enter a prompt')
       return
     }
 
+    if (credits < 1) {
+      setError('Insufficient credits. Please purchase more credits.')
+      return
+    }
+
     setIsGenerating(true)
-    setError(null)
-    setGenerationId(null)
+    setGenerationStatus('processing')
     setProgress(0)
-    setStatus('processing')
     setVideoUrl(null)
+    setError(null)
 
     try {
       const response = await fetch('/api/generate', {
@@ -64,102 +124,88 @@ export default function GeneratePage() {
         },
         body: JSON.stringify({
           prompt,
-          aspectRatio,
+          aspectRatio: selectedAspectRatio,
           duration,
-          style,
+          style: selectedStyle,
         }),
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to start generation')
+      const data = await response.json()
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to start generation')
       }
 
-      const data = await response.json()
-      setGenerationId(data.videoId)
-      
-      // Start polling for status
-      pollGenerationStatus(data.videoId)
+      setVideoId(data.videoId)
+      startPolling(data.videoId)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error occurred')
+      setError(err instanceof Error ? err.message : 'Failed to generate video')
       setIsGenerating(false)
-      setStatus('failed')
+      setGenerationStatus(null)
     }
   }
 
-  const pollGenerationStatus = async (videoId: string) => {
-    const pollInterval = setInterval(async () => {
-      try {
-        const response = await fetch(`/api/generate/status/${videoId}`)
-        if (!response.ok) {
-          throw new Error('Failed to fetch status')
-        }
-
-        const data = await response.json()
-        setProgress(data.progress || 0)
-        setStatus(data.status)
-
-        if (data.status === 'completed' && data.videoUrl) {
-          setVideoUrl(data.videoUrl)
-          setIsGenerating(false)
-          clearInterval(pollInterval)
-        } else if (data.status === 'failed') {
-          setError('Video generation failed')
-          setIsGenerating(false)
-          clearInterval(pollInterval)
-        }
-      } catch (err) {
-        console.error('Polling error:', err)
-        // Don't stop polling on transient errors
-      }
-    }, 2000)
-
-    // Cleanup on unmount
-    return () => clearInterval(pollInterval)
+  const handleSuggestionClick = (suggestion: string) => {
+    setPrompt(suggestion)
   }
 
   const handleViewInGallery = () => {
-    if (generationId) {
-      router.push(`/gallery?video=${generationId}`)
+    if (videoId) {
+      router.push(`/gallery?highlight=${videoId}`)
     } else {
       router.push('/gallery')
     }
   }
 
-  const handleDownload = () => {
-    if (videoUrl) {
-      const link = document.createElement('a')
-      link.href = videoUrl
-      link.download = `t4n-ad-${generationId}.mp4`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+  const handleNewGeneration = () => {
+    setVideoId(null)
+    setVideoUrl(null)
+    setGenerationStatus(null)
+    setProgress(0)
+    setIsGenerating(false)
+    if (pollingInterval) {
+      clearInterval(pollingInterval)
+      setPollingInterval(null)
     }
   }
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Generate AI Video Ad</h1>
-          <p className="text-gray-400">Create professional video ads in seconds with AI</p>
+    <div className="min-h-screen bg-gray-950 text-gray-100">
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        {/* Header */}
+        <div className="mb-10">
+          <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
+            Generate AI Video Ads
+          </h1>
+          <p className="text-gray-400 text-lg">
+            Create stunning video ads in seconds with AI. Enter your prompt, customize settings, and generate.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left column - Controls */}
+          {/* Left Column - Generator Form */}
           <div className="lg:col-span-2 space-y-8">
             {/* Prompt Section */}
-            <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700">
+            <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold">Video Prompt</h2>
-                <span className="text-sm text-gray-400">Describe your video</span>
+                <span className="text-sm text-gray-400">Required</span>
               </div>
               
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="Describe the video you want to create..."
-                className="w-full h-48 bg-gray-900 border border-gray-700 rounded-xl p-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                className="w-full h-48 bg-gray-800 border border-gray-700 rounded-xl p-4 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                disabled={isGenerating}
               />
 
               <div className="mt-4">
@@ -169,7 +215,8 @@ export default function GeneratePage() {
                     <button
                       key={index}
                       onClick={() => handleSuggestionClick(suggestion)}
-                      className="px-3 py-1.5 bg-gray-900 hover:bg-gray-800 border border-gray-700 rounded-lg text-sm text-gray-300 hover:text-white transition-colors"
+                      disabled={isGenerating}
+                      className="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {suggestion.substring(0, 40)}...
                     </button>
@@ -179,31 +226,34 @@ export default function GeneratePage() {
             </div>
 
             {/* Settings Section */}
-            <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700">
+            <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
               <h2 className="text-xl font-semibold mb-6">Video Settings</h2>
               
               <div className="space-y-8">
                 {/* Aspect Ratio */}
                 <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-medium">Aspect Ratio</h3>
-                    <span className="text-sm text-gray-400">Choose format</span>
-                  </div>
+                  <h3 className="text-lg font-medium mb-4">Aspect Ratio</h3>
                   <div className="grid grid-cols-3 gap-4">
-                    {ASPECT_RATIO_OPTIONS.map((option) => (
+                    {ASPECT_RATIOS.map((ratio) => (
                       <button
-                        key={option.id}
-                        onClick={() => setAspectRatio(option.id as any)}
+                        key={ratio.value}
+                        onClick={() => setSelectedAspectRatio(ratio.value)}
+                        disabled={isGenerating}
                         className={cn(
-                          'p-4 rounded-xl border-2 transition-all',
-                          aspectRatio === option.id
-                            ? 'border-orange-500 bg-orange-500/10'
-                            : 'border-gray-700 bg-gray-900 hover:border-gray-600'
+                          "relative p-4 rounded-xl border-2 transition-all",
+                          selectedAspectRatio === ratio.value
+                            ? "border-orange-500 bg-orange-500/10"
+                            : "border-gray-700 bg-gray-800 hover:border-gray-600",
+                          "disabled:opacity-50 disabled:cursor-not-allowed"
                         )}
                       >
-                        <div className="text-2xl mb-2">{option.icon}</div>
-                        <div className="font-medium">{option.label}</div>
-                        <div className="text-xs text-gray-400 mt-1">{option.description}</div>
+                        <div className="flex flex-col items-center">
+                          <div 
+                            className="mb-2 border border-gray-600 bg-gray-700 rounded"
+                            style={{ width: ratio.width, height: ratio.height }}
+                          />
+                          <span className="font-medium">{ratio.label}</span>
+                        </div>
                       </button>
                     ))}
                   </div>
@@ -212,49 +262,44 @@ export default function GeneratePage() {
                 {/* Duration */}
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-medium">Duration</h3>
-                    <span className="text-sm text-gray-400">{duration} seconds</span>
+                    <h3 className="text-lg font-medium">Duration: {duration}s</h3>
+                    <span className="text-sm text-gray-400">5-60 seconds</span>
                   </div>
-                  <div className="space-y-2">
-                    <input
-                      type="range"
-                      min="5"
-                      max="60"
-                      step="1"
-                      value={duration}
-                      onChange={(e) => setDuration(parseInt(e.target.value))}
-                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-orange-500"
-                    />
-                    <div className="flex justify-between text-xs text-gray-400">
-                      <span>5s</span>
-                      <span>15s</span>
-                      <span>30s</span>
-                      <span>45s</span>
-                      <span>60s</span>
-                    </div>
+                  <input
+                    type="range"
+                    min="5"
+                    max="60"
+                    value={duration}
+                    onChange={(e) => setDuration(parseInt(e.target.value))}
+                    disabled={isGenerating}
+                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-orange-500"
+                  />
+                  <div className="flex justify-between text-sm text-gray-400 mt-2">
+                    <span>5s</span>
+                    <span>30s</span>
+                    <span>60s</span>
                   </div>
                 </div>
 
                 {/* Style */}
                 <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-medium">Style</h3>
-                    <span className="text-sm text-gray-400">Visual theme</span>
-                  </div>
+                  <h3 className="text-lg font-medium mb-4">Style</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {STYLE_OPTIONS.map((option) => (
+                    {STYLES.map((style) => (
                       <button
-                        key={option.id}
-                        onClick={() => setStyle(option.id)}
+                        key={style.id}
+                        onClick={() => setSelectedStyle(style.id)}
+                        disabled={isGenerating}
                         className={cn(
-                          'p-4 rounded-xl border-2 text-left transition-all',
-                          style === option.id
-                            ? 'border-orange-500 bg-orange-500/10'
-                            : 'border-gray-700 bg-gray-900 hover:border-gray-600'
+                          "p-4 rounded-xl border-2 text-left transition-all",
+                          selectedStyle === style.id
+                            ? "border-orange-500 bg-orange-500/10"
+                            : "border-gray-700 bg-gray-800 hover:border-gray-600",
+                          "disabled:opacity-50 disabled:cursor-not-allowed"
                         )}
                       >
-                        <div className="font-medium mb-1">{option.label}</div>
-                        <div className="text-xs text-gray-400">{option.description}</div>
+                        <div className="font-medium mb-1">{style.label}</div>
+                        <div className="text-sm text-gray-400">{style.description}</div>
                       </button>
                     ))}
                   </div>
@@ -263,150 +308,109 @@ export default function GeneratePage() {
             </div>
           </div>
 
-          {/* Right column - Preview & Actions */}
+          {/* Right Column - Preview & Actions */}
           <div className="space-y-8">
             {/* Preview */}
-            <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700">
+            <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
               <h2 className="text-xl font-semibold mb-4">Preview</h2>
               
-              <div className={cn(
-                'relative bg-gray-900 border-2 border-gray-700 rounded-xl overflow-hidden mb-4',
-                aspectRatio === '16:9' ? 'aspect-video' : '',
-                aspectRatio === '9:16' ? 'aspect-[9/16]' : '',
-                aspectRatio === '1:1' ? 'aspect-square' : ''
-              )}>
+              <div className="aspect-video bg-gray-800 rounded-xl border border-gray-700 flex items-center justify-center mb-4 overflow-hidden">
                 {videoUrl ? (
                   <video
                     src={videoUrl}
                     controls
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-6xl mb-4 opacity-50">
-                        {aspectRatio === '16:9' && '▭'}
-                        {aspectRatio === '9:16' && '▯'}
-                        {aspectRatio === '1:1' && '▢'}
-                      </div>
-                      <p className="text-gray-500">Preview will appear here</p>
+                  <div className="text-center p-8">
+                    <div className="w-32 h-32 mx-auto mb-4 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 flex items-center justify-center">
+                      <div className="text-4xl">🎬</div>
                     </div>
+                    <p className="text-gray-400">
+                      {isGenerating ? 'Generating preview...' : 'Video preview will appear here'}
+                    </p>
                   </div>
                 )}
               </div>
 
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Format:</span>
-                  <span className="font-medium">{aspectRatio}</span>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-400">Aspect Ratio:</span>
+                  <span className="font-medium">{selectedAspectRatio}</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-400">Duration:</span>
                   <span className="font-medium">{duration}s</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-400">Style:</span>
-                  <span className="font-medium capitalize">{style}</span>
+                  <span className="font-medium capitalize">{selectedStyle}</span>
                 </div>
               </div>
             </div>
 
-            {/* Generation Status */}
-            {isGenerating && (
-              <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700">
-                <h2 className="text-xl font-semibold mb-4">Generating...</h2>
-                
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="text-gray-400">Progress</span>
-                      <span className="font-medium">{progress}%</span>
+            {/* Status & Actions */}
+            <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
+              <div className="space-y-6">
+                {/* Credits */}
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Your Credits:</span>
+                  <div className="flex items-center gap-2">
+                    <div className="px-3 py-1 bg-gradient-to-r from-orange-500/20 to-amber-500/20 border border-orange-500/30 rounded-lg">
+                      <span className="font-bold text-orange-400">{credits}</span>
                     </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2">
-                      <div 
-                        className="bg-orange-500 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${progress}%` }}
+                    <button
+                      onClick={() => router.push('/pricing')}
+                      className="text-sm text-orange-400 hover:text-orange-300 transition-colors"
+                    >
+                      Buy more
+                    </button>
+                  </div>
+                </div>
+
+                {/* Cost */}
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Cost per video:</span>
+                  <span className="font-medium">1 credit</span>
+                </div>
+
+                {/* Status */}
+                {generationStatus && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Status:</span>
+                      <StatusBadge status={generationStatus} />
+                    </div>
+                    {isGenerating && (
+                      <ProgressBar
+                        progress={progress}
+                        label={`Generating... ${progress}%`}
+                        variant="orange"
+                        showAnimation
                       />
-                    </div>
+                    )}
                   </div>
-
-                  <div className="text-sm">
-                    <div className="flex items-center gap-2 text-gray-400">
-                      <div className={cn(
-                        'w-2 h-2 rounded-full animate-pulse',
-                        status === 'processing' ? 'bg-orange-500' : '',
-                        status === 'completed' ? 'bg-green-500' : '',
-                        status === 'failed' ? 'bg-red-500' : ''
-                      )} />
-                      <span className="capitalize">{status}</span>
-                    </div>
-                    <p className="mt-2 text-gray-500 text-xs">
-                      {status === 'processing' && 'AI is creating your video...'}
-                      {status === 'completed' && 'Video ready!'}
-                      {status === 'failed' && 'Generation failed'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="space-y-4">
-              {error && (
-                <div className="bg-red-500/10 border border-red-500/50 rounded-xl p-4">
-                  <p className="text-red-400 text-sm">{error}</p>
-                </div>
-              )}
-
-              <button
-                onClick={handleGenerate}
-                disabled={isGenerating}
-                className={cn(
-                  'w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all',
-                  isGenerating
-                    ? 'bg-gray-700 cursor-not-allowed'
-                    : 'bg-orange-500 hover:bg-orange-600 active:scale-95'
                 )}
-              >
-                {isGenerating ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Generating...
+
+                {/* Error */}
+                {error && (
+                  <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                    <p className="text-red-400 text-sm">{error}</p>
                   </div>
-                ) : (
-                  'Generate Video'
                 )}
-              </button>
 
-              {videoUrl && (
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={handleDownload}
-                    className="py-3 px-4 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-xl font-medium transition-colors"
-                  >
-                    Download
-                  </button>
-                  <button
-                    onClick={handleViewInGallery}
-                    className="py-3 px-4 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-xl font-medium transition-colors"
-                  >
-                    View in Gallery
-                  </button>
-                </div>
-              )}
-
-              <div className="text-center">
-                <p className="text-sm text-gray-500">
-                  Uses 1 credit per generation •{' '}
-                  <a href="/pricing" className="text-orange-500 hover:text-orange-400">
-                    View pricing
-                  </a>
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
+                {/* Action Buttons */}
+                <div className="space-y-3">
+                  {videoUrl ? (
+                    <>
+                      <button
+                        onClick={handleViewInGallery}
+                        className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity"
+                      >
+                        View in Gallery
+                      </button>
+                      <button
+                        onClick={handleNewGeneration}
+                        className="w-full py-3 bg-gray-800 text-gray-300 font-semibold rounded-xl border border-gray-700 hover:bg-gray-700 transition-colors"
+                      >
+                        Create
