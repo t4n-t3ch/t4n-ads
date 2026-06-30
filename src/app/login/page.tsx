@@ -1,183 +1,165 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export default function LoginPage() {
   const router = useRouter()
   const [isLogin, setIsLogin] = useState(true)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [resetSent, setResetSent] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    confirmPassword: ''
+  })
 
-  const validateForm = () => {
-    if (!email || !email.includes('@')) {
-      setMessage({ type: 'error', text: 'Please enter a valid email address' })
-      return false
-    }
-    if (!password || password.length < 6) {
-      setMessage({ type: 'error', text: 'Password must be at least 6 characters' })
-      return false
-    }
-    if (!isLogin && password !== confirmPassword) {
-      setMessage({ type: 'error', text: 'Passwords do not match' })
-      return false
-    }
-    return true
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+    setError(null)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!validateForm()) return
-
     setLoading(true)
-    setMessage(null)
+    setError(null)
+    setSuccess(null)
+
+    // Validation
+    if (!formData.email || !formData.password) {
+      setError('Please fill in all required fields')
+      setLoading(false)
+      return
+    }
+
+    if (!isLogin && formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match')
+      setLoading(false)
+      return
+    }
 
     try {
       if (isLogin) {
+        // Sign in
         const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+          email: formData.email,
+          password: formData.password
         })
+
         if (error) throw error
-        setMessage({ type: 'success', text: 'Login successful! Redirecting...' })
-        setTimeout(() => router.push('/generate'), 1500)
+        
+        setSuccess('Login successful! Redirecting...')
+        router.push('/generate')
       } else {
+        // Sign up
         const { error } = await supabase.auth.signUp({
-          email,
-          password,
+          email: formData.email,
+          password: formData.password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
-          },
+            emailRedirectTo: `${window.location.origin}/api/auth/callback`
+          }
         })
+
         if (error) throw error
-        setMessage({ 
-          type: 'success', 
-          text: 'Account created! Please check your email to confirm your account.' 
-        })
+        
+        setSuccess('Account created! Please check your email to confirm your account.')
+        setFormData({ email: '', password: '', confirmPassword: '' })
       }
-    } catch (error: any) {
-      setMessage({ 
-        type: 'error', 
-        text: error.message || 'An error occurred. Please try again.' 
-      })
+    } catch (err: any) {
+      setError(err.message || 'An error occurred')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleLogin = async () => {
     setLoading(true)
-    setMessage(null)
+    setError(null)
     
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
+          redirectTo: `${window.location.origin}/api/auth/callback`
+        }
       })
+
       if (error) throw error
-    } catch (error: any) {
-      setMessage({ 
-        type: 'error', 
-        text: error.message || 'Google sign-in failed. Please try again.' 
-      })
+    } catch (err: any) {
+      setError(err.message || 'Failed to sign in with Google')
       setLoading(false)
     }
   }
 
-  const handlePasswordReset = async () => {
-    if (!email || !email.includes('@')) {
-      setMessage({ type: 'error', text: 'Please enter your email address first' })
+  const handleForgotPassword = async () => {
+    if (!formData.email) {
+      setError('Please enter your email address')
       return
     }
 
     setLoading(true)
-    setMessage(null)
+    setError(null)
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/callback?reset=true`,
+      const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
+        redirectTo: `${window.location.origin}/reset-password`
       })
+
       if (error) throw error
-      setResetSent(true)
-      setMessage({ 
-        type: 'success', 
-        text: 'Password reset email sent! Check your inbox.' 
-      })
-    } catch (error: any) {
-      setMessage({ 
-        type: 'error', 
-        text: error.message || 'Failed to send reset email. Please try again.' 
-      })
+      
+      setSuccess('Password reset email sent! Check your inbox.')
+    } catch (err: any) {
+      setError(err.message || 'Failed to send reset email')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <div className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">T4N</span>
-            </div>
-            <span className="text-2xl font-bold text-white">Ads</span>
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="bg-gray-800/50 backdrop-blur-xl rounded-2xl border border-gray-700 p-8 shadow-2xl">
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <Link href="/" className="inline-flex items-center gap-2">
+              <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-xl">T4N</span>
+              </div>
+              <span className="text-2xl font-bold text-white">T4N Ads</span>
+            </Link>
+            <p className="text-gray-400 mt-2">
+              {isLogin ? 'Sign in to your account' : 'Create your account'}
+            </p>
           </div>
-        </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
-          {isLogin ? 'Welcome back' : 'Create your account'}
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-400">
-          {isLogin ? "Don't have an account? " : "Already have an account? "}
-          <button
-            onClick={() => {
-              setIsLogin(!isLogin)
-              setMessage(null)
-              setResetSent(false)
-            }}
-            className="font-medium text-orange-500 hover:text-orange-400 transition-colors"
-          >
-            {isLogin ? 'Sign up' : 'Sign in'}
-          </button>
-        </p>
-      </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-gray-800/50 backdrop-blur-sm py-8 px-4 shadow-xl sm:rounded-lg sm:px-10 border border-gray-700">
-          {message && (
-            <div className={`mb-6 p-4 rounded-lg flex items-start space-x-3 ${
-              message.type === 'success' 
-                ? 'bg-green-900/30 border border-green-800' 
-                : 'bg-red-900/30 border border-red-800'
-            }`}>
-              {message.type === 'success' ? (
-                <CheckCircle className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
-              ) : (
-                <AlertCircle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
-              )}
-              <p className={`text-sm ${message.type === 'success' ? 'text-green-300' : 'text-red-300'}`}>
-                {message.text}
-              </p>
+          {/* Error/Success Messages */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-900/30 border border-red-700 rounded-lg">
+              <p className="text-red-300 text-sm">{error}</p>
             </div>
           )}
 
+          {success && (
+            <div className="mb-6 p-4 bg-green-900/30 border border-green-700 rounded-lg">
+              <p className="text-green-300 text-sm">{success}</p>
+            </div>
+          )}
+
+          {/* Google OAuth Button */}
           <button
-            onClick={handleGoogleSignIn}
+            onClick={handleGoogleLogin}
             disabled={loading}
-            className="w-full flex justify-center items-center py-3 px-4 border border-gray-600 rounded-lg shadow-sm text-sm font-medium text-white bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-orange-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full mb-6 flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-gray-900 font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
                 fill="currentColor"
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -198,167 +180,151 @@ export default function LoginPage() {
             Continue with Google
           </button>
 
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-600"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-gray-800 text-gray-400">Or continue with email</span>
-              </div>
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-700"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-gray-800/50 text-gray-400">Or continue with email</span>
+            </div>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                Email address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={formData.email}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
+                placeholder="you@example.com"
+              />
             </div>
 
-            <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete={isLogin ? "current-password" : "new-password"}
+                required
+                value={formData.password}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
+                placeholder="••••••••"
+                minLength={6}
+              />
+            </div>
+
+            {!isLogin && (
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-300">
-                  Email address
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
+                  Confirm Password
                 </label>
-                <div className="mt-1 relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-3 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
-                    placeholder="you@example.com"
-                  />
-                </div>
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
+                  placeholder="••••••••"
+                  minLength={6}
+                />
               </div>
+            )}
 
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-300">
-                  Password
-                </label>
-                <div className="mt-1 relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    id="password"
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete={isLogin ? 'current-password' : 'new-password'}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full pl-10 pr-10 py-3 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
-                    placeholder="••••••••"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-300" />
-                    ) : (
-                      <Eye className="h-5 w-5 text-gray-400 hover:text-gray-300" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {!isLogin && (
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300">
-                    Confirm Password
-                  </label>
-                  <div className="mt-1 relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      autoComplete="new-password"
-                      required
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="block w-full pl-10 pr-10 py-3 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
-                      placeholder="••••••••"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-300" />
-                      ) : (
-                        <Eye className="h-5 w-5 text-gray-400 hover:text-gray-300" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {isLogin && !resetSent && (
-                <div className="flex items-center justify-end">
-                  <button
-                    type="button"
-                    onClick={handlePasswordReset}
-                    disabled={loading}
-                    className="text-sm font-medium text-orange-500 hover:text-orange-400 transition-colors disabled:opacity-50"
-                  >
-                    Forgot your password?
-                  </button>
-                </div>
-              )}
-
-              <div>
+            {isLogin && (
+              <div className="flex justify-end">
                 <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-orange-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-sm text-orange-400 hover:text-orange-300 transition-colors"
                 >
-                  {loading ? (
-                    <div className="flex items-center">
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                      {isLogin ? 'Signing in...' : 'Creating account...'}
-                    </div>
-                  ) : (
-                    isLogin ? 'Sign in' : 'Create account'
-                  )}
+                  Forgot your password?
                 </button>
               </div>
-            </form>
+            )}
 
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-600"></div>
+            <button
+              type="submit"
+              disabled={loading}
+              className={cn(
+                "w-full py-3 px-4 rounded-lg font-medium transition-all",
+                "bg-gradient-to-r from-orange-500 to-amber-500 text-white",
+                "hover:from-orange-600 hover:to-amber-600",
+                "focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-900",
+                "disabled:opacity-50 disabled:cursor-not-allowed"
+              )}
+            >
+              {loading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  {isLogin ? 'Signing in...' : 'Creating account...'}
                 </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-gray-800 text-gray-400">By continuing, you agree to our</span>
-                </div>
-              </div>
-              <p className="mt-4 text-center text-xs text-gray-400">
-                <Link href="/terms" className="text-orange-500 hover:text-orange-400 transition-colors">
-                  Terms of Service
-                </Link>
-                {' · '}
-                <Link href="/privacy" className="text-orange-500 hover:text-orange-400 transition-colors">
-                  Privacy Policy
-                </Link>
-              </p>
-            </div>
+              ) : isLogin ? (
+                'Sign in'
+              ) : (
+                'Create account'
+              )}
+            </button>
+          </form>
+
+          {/* Toggle between login/signup */}
+          <div className="mt-6 text-center">
+            <p className="text-gray-400">
+              {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
+              <button
+                onClick={() => {
+                  setIsLogin(!isLogin)
+                  setError(null)
+                  setSuccess(null)
+                }}
+                className="text-orange-400 hover:text-orange-300 font-medium transition-colors"
+              >
+                {isLogin ? 'Sign up' : 'Sign in'}
+              </button>
+            </p>
+          </div>
+
+          {/* Terms */}
+          <div className="mt-8 pt-6 border-t border-gray-700">
+            <p className="text-xs text-gray-500 text-center">
+              By continuing, you agree to our{' '}
+              <Link href="/terms" className="text-gray-400 hover:text-gray-300">
+                Terms of Service
+              </Link>{' '}
+              and{' '}
+              <Link href="/privacy" className="text-gray-400 hover:text-gray-300">
+                Privacy Policy
+              </Link>
+            </p>
           </div>
         </div>
 
-        <div className="mt-8 text-center">
-          <p className="text-sm text-gray-400">
-            Need help?{' '}
-            <Link href="/contact" className="font-medium text-orange-500 hover:text-orange-400 transition-colors">
-              Contact support
-            </Link>
-          </p>
+        {/* Back to home */}
+        <div className="mt-6 text-center">
+          <Link
+            href="/"
+            className="text-gray-400 hover:text-gray-300 text-sm font-medium transition-colors inline-flex items-center gap-1"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to home
+          </Link>
         </div>
       </div>
     </div>
