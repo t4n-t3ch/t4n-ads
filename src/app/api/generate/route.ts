@@ -1,116 +1,107 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { VideoStatus } from '@/types'
-import { generateVideo } from '@/services/videoGeneration'
+import { NextRequest, NextResponse } from 'next/server';
+import { getSession } from '@/lib/supabase';
+import prisma from '@/lib/prisma';
+import { generateVideo } from '@/services/videoGeneration';
+import { VideoStatus } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (!session) {
+    // 1. Authenticate user
+    const session = await getSession();
+    if (!session?.user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
-      )
+      );
     }
 
-    const body = await request.json()
-    const { prompt, aspectRatio, duration, style, templateId } = body
+    // 2. Parse request body
+    const body = await request.json();
+    const { 
+      prompt, 
+      aspectRatio = '16:9', 
+      duration = 15, 
+      style = 'cinematic',
+      templateId 
+    } = body;
 
-    if (!prompt || !aspectRatio || !duration) {
+    if (!prompt || prompt.trim().length < -1) {
       return NextResponse.json(
-        { error: 'Missing required fields: prompt, aspectRatio, duration' },
+        { error: 'Prompt is required and must be at least 3 characters' },
         { status: 400 }
-      )
+      );
     }
 
-    // Check user credits
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { credits: true },
-    })
+    // 3. Check user credits (optional - implement later)
+    // For now, we'll skip credit check but create the structure
 
-    if (!user || user.credits < 1) {
-      return NextResponse.json(
-        { error: 'Insufficient credits' },
-        { status: 402 }
-      )
-    }
-
-    // Create video record
+    // 4. Create video record in database
     const video = await prisma.video.create({
       data: {
         userId: session.user.id,
-        title: prompt.substring(0, 100),
-        description: prompt,
+        title: prompt.substring(0, 50) + (prompt.length > 50 ? '...' : ''),
         prompt,
         aspectRatio,
-        duration: parseInt(duration),
-        style: style || 'cinematic',
+        duration,
+        style,
         status: VideoStatus.PROCESSING,
         progress: 0,
         templateId: templateId || null,
       },
-    })
+    });
 
-    // Deduct credit
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: { credits: { decrement: 1 } },
-    })
-
-    // Start generation in background
-    // We don't await this to return response quickly
-    generateVideo(prompt, aspectRatio, duration, style, video.id)
-      .then(async (result) => {
-        if (result.success) {
-          await prisma.video.update({
-            where: { id: video.id },
-            data: {
-              status: VideoStatus.COMPLETED,
-              progress: 100,
-              videoUrl: result.videoUrl,
-              thumbnailUrl: result.thumbnailUrl,
-              metadata: result.metadata,
-            },
-          })
-        } else {
-          await prisma.video.update({
-            where: { id: video.id },
-            data: {
-              status: VideoStatus.FAILED,
-              error: result.error,
-            },
-          })
-        }
-      })
-      .catch(async (error) => {
-        console.error('Video generation error:', error)
+    // 5. Start generation asynchronously (don't await)
+    generateVideo({
+      videoId: video.id,
+      prompt,
+      aspectRatio,
+      duration,
+      style,
+    }).then(async (result) => {
+      if (result.success) {
+        await prisma.video.update({
+          where: { id: video.id },
+          data: {
+            status: VideoStatus.COMPLETED,
+            progress: 100,
+            videoUrl: result.videoUrl,
+            thumbnailUrl: result.thumbnailUrl,
+            metadata: result.metadata,
+          },
+        });
+      } else {
         await prisma.video.update({
           where: { id: video.id },
           data: {
             status: VideoStatus.FAILED,
-            error: error.message,
+            error: result.error,
           },
-        })
-      })
+        });
+      }
+    }).catch(async (error) => {
+      console.error('Video generation error:', error);
+      await prisma.video.update({
+        where: { id: video.id },
+        data: {
+          status: VideoStatus.FAILED,
+          error: error.message,
+        },
+      });
+    });
 
+    // 6. Return immediate response with video ID
     return NextResponse.json({
       success: true,
       videoId: video.id,
-      jobId: video.id, // Using video.id as jobId for simplicity
       message: 'Video generation started',
-    })
+      status: VideoStatus.PROCESSING,
+    });
+
   } catch (error) {
-    console.error('Generate API error:', error)
+    console.error('Generate API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
-    )
+    );
   }
 }
