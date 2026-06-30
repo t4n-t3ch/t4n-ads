@@ -1,15 +1,13 @@
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import type { Video } from '@/types'
+import { VideoStatus } from '@/types'
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+    const { data: { session } } = await supabase.auth.getSession()
 
     if (!session) {
       return NextResponse.json(
@@ -18,33 +16,44 @@ export async function GET(request: Request) {
       )
     }
 
-    const videos = await prisma.video.findMany({
-      where: {
-        userId: session.user.id,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email! },
       include: {
-        template: {
-          select: {
-            name: true,
-            category: true,
-          },
-        },
-      },
+        videos: {
+          orderBy: { createdAt: 'desc' },
+          include: {
+            template: {
+              select: {
+                id: true,
+                name: true,
+                category: true,
+                thumbnailUrl: true
+              }
+            }
+          }
+        }
+      }
     })
 
-    const formattedVideos: Video[] = videos.map((video) => ({
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      )
+    }
+
+    // Transform the data to match our Video type
+    const videos = user.videos.map(video => ({
       id: video.id,
       title: video.title,
-      description: video.description || '',
+      description: video.description,
       prompt: video.prompt,
-      status: video.status,
-      aspectRatio: video.aspectRatio,
-      duration: video.duration,
       videoUrl: video.videoUrl,
       thumbnailUrl: video.thumbnailUrl,
+      status: video.status as VideoStatus,
+      aspectRatio: video.aspectRatio,
+      duration: video.duration,
+      style: video.style,
       createdAt: video.createdAt.toISOString(),
       updatedAt: video.updatedAt.toISOString(),
       userId: video.userId,
@@ -53,14 +62,15 @@ export async function GET(request: Request) {
         id: video.template.id,
         name: video.template.name,
         category: video.template.category,
-      } : undefined,
+        thumbnailUrl: video.template.thumbnailUrl
+      } : null
     }))
 
-    return NextResponse.json(formattedVideos)
+    return NextResponse.json(videos)
   } catch (error) {
-    console.error('Error fetching gallery videos:', error)
+    console.error('Error fetching gallery:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch videos' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }
