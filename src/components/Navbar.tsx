@@ -1,238 +1,167 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cn } from '@/lib/utils'
+import { useState } from 'react'
+import { supabase } from '@/lib/supabase'
 
 const Navbar = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const pathname = usePathname()
-  const router = useRouter()
-  const supabase = createClientComponentClient()
-
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
-      setLoading(false)
-    }
-
-    getUser()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [supabase])
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
-    router.push('/')
-    router.refresh()
+    setUser(null)
   }
 
-  const navLinks = [
-    { name: 'Generate', href: '/generate' },
-    { name: 'Gallery', href: '/gallery' },
-    { name: 'Templates', href: '/templates' },
-    { name: 'Pricing', href: '/pricing' },
-    { name: 'Dashboard', href: '/dashboard' },
-  ]
-
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-gray-800 bg-gray-950/95 backdrop-blur supports-[backdrop-filter]:bg-gray-950/60">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+    <nav className="bg-gray-900 border-b border-gray-800">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-amber-600">
-                <span className="text-lg font-bold text-white">T4N</span>
+              <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">T4N</span>
               </div>
-              <span className="text-xl font-bold text-white">Ads</span>
+              <span className="text-white font-bold text-xl">T4N Ads</span>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-4">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  className={cn(
-                    'rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                    pathname === link.href
-                      ? 'bg-gray-800 text-white'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                  )}
-                >
-                  {link.name}
-                </Link>
-              ))}
-            </div>
+          <div className="hidden md:flex items-center space-x-8">
+            <Link href="/generate" className="text-gray-300 hover:text-white transition">
+              Generate
+            </Link>
+            <Link href="/gallery" className="text-gray-300 hover:text-white transition">
+              Gallery
+            </Link>
+            <Link href="/templates" className="text-gray-300 hover:text-white transition">
+              Templates
+            </Link>
+            <Link href="/pricing" className="text-gray-300 hover:text-white transition">
+              Pricing
+            </Link>
+            <Link href="/dashboard" className="text-gray-300 hover:text-white transition">
+              Dashboard
+            </Link>
           </div>
 
-          {/* Right side - Auth */}
-          <div className="flex items-center space-x-4">
-            {loading ? (
-              <div className="h-8 w-20 animate-pulse rounded-md bg-gray-800" />
-            ) : user ? (
-              <div className="relative">
-                <button
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="flex items-center space-x-2 rounded-full p-1 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                >
-                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center">
-                    <span className="text-sm font-medium text-white">
-                      {user.email?.charAt(0).toUpperCase() || 'U'}
-                    </span>
-                  </div>
-                  <svg
-                    className="h-5 w-5 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
-
-                {/* Dropdown Menu */}
-                {isMenuOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-40"
-                      onClick={() => setIsMenuOpen(false)}
-                    />
-                    <div className="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-md bg-gray-900 py-1 shadow-lg ring-1 ring-black ring-opacity-5">
-                      <div className="border-b border-gray-800 px-4 py-3">
-                        <p className="text-sm font-medium text-white">
-                          {user.email}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {user.id.slice(0, 8)}...
-                        </p>
-                      </div>
-                      <Link
-                        href="/dashboard"
-                        className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Dashboard
-                      </Link>
-                      <Link
-                        href="/profile"
-                        className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Profile Settings
-                      </Link>
-                      <button
-                        onClick={handleSignOut}
-                        className="block w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-800 hover:text-white"
-                      >
-                        Sign Out
-                      </button>
+          {/* Auth Section */}
+          <div className="hidden md:flex items-center space-x-4">
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <div className="text-sm text-gray-300">
+                  Credits: <span className="text-orange-500 font-bold">10</span>
+                </div>
+                <div className="relative group">
+                  <button className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">
+                        {user.email?.substring(0, 1).toUpperCase()}
+                      </span>
                     </div>
-                  </>
-                )}
+                    <span className="text-gray-300">{user.email}</span>
+                  </button>
+                  <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-lg py-1 hidden group-hover:block">
+                    <Link href="/dashboard" className="block px-4 py-2 text-gray-300 hover:bg-gray-700">
+                      Dashboard
+                    </Link>
+                    <button
+                      onClick={handleSignOut}
+                      className="block w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
               </div>
             ) : (
-              <>
+              <div className="flex items-center space-x-4">
                 <Link
                   href="/login"
-                  className="hidden rounded-md px-4 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white md:block"
+                  className="px-4 py-2 text-orange-500 border border-orange-500 rounded-lg hover:bg-orange-500 hover:text-white transition"
                 >
                   Sign In
                 </Link>
                 <Link
-                  href="/login?signup=true"
-                  className="rounded-md bg-gradient-to-r from-orange-500 to-amber-600 px-4 py-2 text-sm font-medium text-white shadow hover:from-orange-600 hover:to-amber-700"
+                  href="/pricing"
+                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
                 >
                   Get Started
                 </Link>
-              </>
+              </div>
             )}
+          </div>
 
-            {/* Mobile menu button */}
+          {/* Mobile Menu Button */}
+          <div className="md:hidden">
             <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="rounded-md p-2 text-gray-400 hover:bg-gray-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 md:hidden"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="text-gray-300 hover:text-white"
             >
-              <span className="sr-only">Open main menu</span>
-              {isMenuOpen ? (
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
-              )}
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {mobileMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="border-t border-gray-800 bg-gray-900 md:hidden">
-          <div className="space-y-1 px-2 pb-3 pt-2">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                className={cn(
-                  'block rounded-md px-3 py-2 text-base font-medium',
-                  pathname === link.href
-                    ? 'bg-gray-800 text-white'
-                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                )}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {link.name}
-              </Link>
-            ))}
-            {!user && (
-              <Link
-                href="/login"
-                className="block rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-800 hover:text-white"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Sign In
-              </Link>
-            )}
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-gray-900 border-t border-gray-800">
+          <div className="px-4 py-3 space-y-3">
+            <Link href="/generate" className="block text-gray-300 hover:text-white">
+              Generate
+            </Link>
+            <Link href="/gallery" className="block text-gray-300 hover:text-white">
+              Gallery
+            </Link>
+            <Link href="/templates" className="block text-gray-300 hover:text-white">
+              Templates
+            </Link>
+            <Link href="/pricing" className="block text-gray-300 hover:text-white">
+              Pricing
+            </Link>
+            <Link href="/dashboard" className="block text-gray-300 hover:text-white">
+              Dashboard
+            </Link>
+            <div className="pt-3 border-t border-gray-800">
+              {user ? (
+                <div className="space-y-3">
+                  <div className="text-gray-300">Logged in as: {user.email}</div>
+                  <div className="text-gray-300">
+                    Credits: <span className="text-orange-500">10</span>
+                  </div>
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full text-left text-gray-300 hover:text-white"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <Link
+                    href="/login"
+                    className="block w-full text-center px-4 py-2 text-orange-500 border border-orange-500 rounded-lg"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/pricing"
+                    className="block w-full text-center px-4 py-2 bg-orange-500 text-white rounded-lg"
+                  >
+                    Get Started
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
