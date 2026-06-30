@@ -16,59 +16,62 @@ export interface VideoGenerationResult {
 }
 
 /**
- * Video generation service that integrates with OpenRouter AI
- * If OPENROUTER_API_KEY is not set, it simulates generation with a placeholder
+ * Video generation service that integrates with OpenRouter API for AI script generation
+ * Falls back to placeholder video generation if OPENROUTER_API_KEY is not set
  */
 export class VideoGenerationService {
-  private static instance: VideoGenerationService;
   private openRouterApiKey: string | undefined;
-  private simulationDelay: number = 5000; // 5 seconds for simulation
+  private baseUrl = 'https://openrouter.ai/api/v1';
 
-  private constructor() {
+  constructor() {
     this.openRouterApiKey = process.env.OPENROUTER_API_KEY;
-  }
-
-  public static getInstance(): VideoGenerationService {
-    if (!VideoGenerationService.instance) {
-      VideoGenerationService.instance = new VideoGenerationService();
-    }
-    return VideoGenerationService.instance;
   }
 
   /**
    * Generate a video based on the provided options
+   * If OpenRouter API key is available, generates AI script and creates video
+   * Otherwise, simulates generation with a placeholder video
    */
-  public async generateVideo(options: VideoGenerationOptions): Promise<VideoGenerationResult> {
-    try {
-      // If OpenRouter API key is not set, simulate generation
-      if (!this.openRouterApiKey) {
-        console.log('OpenRouter API key not set, simulating video generation...');
-        return this.simulateVideoGeneration(options);
-      }
+  async generateVideo(options: VideoGenerationOptions): Promise<VideoGenerationResult> {
+    const { prompt, aspectRatio, duration, style = 'cinematic' } = options;
 
-      // Generate video script using OpenRouter API
-      const script = await this.generateVideoScript(options.prompt, options.style);
+    // Validate duration
+    if (duration < 5 || duration > 60) {
+      return {
+        success: false,
+        error: 'Duration must be between 5 and 60 seconds',
+        status: VideoStatus.FAILED,
+        progress: 0,
+      };
+    }
+
+    // If OpenRouter API key is not set, use placeholder generation
+    if (!this.openRouterApiKey) {
+      console.log('OPENROUTER_API_KEY not set, using placeholder video generation');
+      return this.generatePlaceholderVideo(options);
+    }
+
+    try {
+      // Step 1: Generate video script using OpenRouter API
+      const script = await this.generateVideoScript(prompt, duration, style);
       
+      // Step 2: Generate video based on script (simulated for now)
       // In a real implementation, this would call a video generation API
-      // For now, we'll simulate the process and return a placeholder
-      // TODO: Integrate with actual video generation API (RunwayML, Pika Labs, etc.)
-      
-      // Simulate processing delay
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      const videoUrl = await this.generateVideoFromScript(script, aspectRatio, duration);
       
       return {
         success: true,
-        videoUrl: this.generatePlaceholderVideoUrl(options),
+        videoUrl,
         status: VideoStatus.COMPLETED,
-        progress: 100
+        progress: 100,
       };
     } catch (error) {
-      console.error('Video generation error:', error);
+      console.error('Video generation failed:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error during video generation',
+        error: error instanceof Error ? error.message : 'Video generation failed',
         status: VideoStatus.FAILED,
-        progress: 0
+        progress: 0,
       };
     }
   }
@@ -76,110 +79,135 @@ export class VideoGenerationService {
   /**
    * Generate a video script using OpenRouter API with Claude 3 Haiku
    */
-  private async generateVideoScript(prompt: string, style?: string): Promise<string> {
-    if (!this.openRouterApiKey) {
-      throw new Error('OpenRouter API key not configured');
-    }
-
-    const systemPrompt = `You are a professional video script writer. Create a concise video script based on the user's prompt.
-    Format the script as a sequence of scenes with visual descriptions, voiceover text, and timing cues.
-    Keep it engaging and suitable for ${style || 'cinematic'} style.`;
-
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+  private async generateVideoScript(
+    prompt: string,
+    duration: number,
+    style: string
+  ): Promise<string> {
+    const response = await fetch(`${this.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.openRouterApiKey}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': 'https://t4n-ads.vercel.app',
-        'X-Title': 'T4N Ads - AI Video Generation'
+        'X-Title': 'T4N Ads - AI Video Generation',
       },
       body: JSON.stringify({
         model: 'claude-3-haiku:beta',
         messages: [
           {
             role: 'system',
-            content: systemPrompt
+            content: `You are a professional video script writer. Create a concise video script for a ${duration}-second ad.
+              Style: ${style}
+              Format: Provide scene descriptions with timing markers.
+              Structure: Hook (0-3s), Problem (3-10s), Solution (10-${duration-5}s), Call to Action (${duration-5}-${duration}s).`
           },
           {
             role: 'user',
-            content: `Create a video script for: ${prompt}`
+            content: prompt
           }
         ],
         max_tokens: 1000,
-        temperature: 0.7
-      })
+        temperature: 0.7,
+      }),
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`);
+      const error = await response.text();
+      throw new Error(`OpenRouter API error: ${error}`);
     }
 
     const data = await response.json();
-    return data.choices[0]?.message?.content || 'No script generated';
+    return data.choices[0]?.message?.content || '';
   }
 
   /**
-   * Simulate video generation for development/testing
+   * Generate video from script (simulated implementation)
+   * In a real implementation, this would call a video generation API like RunwayML, Pika Labs, etc.
    */
-  private async simulateVideoGeneration(options: VideoGenerationOptions): Promise<VideoGenerationResult> {
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, this.simulationDelay));
-    
+  private async generateVideoFromScript(
+    script: string,
+    aspectRatio: string,
+    duration: number
+  ): Promise<string> {
+    // Simulate video generation processing time
+    await new Promise(resolve => setTimeout(resolve, 5000));
+
+    // For now, return a placeholder video URL
+    // In production, this would be the actual generated video URL
+    const placeholderVideos = {
+      '16:9': 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+      '9:16': 'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+      '1:1': 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    };
+
+    return placeholderVideos[aspectRatio as keyof typeof placeholderVideos] || 
+           'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+  }
+
+  /**
+   * Generate a placeholder video for development/testing
+   */
+  private async generatePlaceholderVideo(
+    options: VideoGenerationOptions
+  ): Promise<VideoGenerationResult> {
+    const { aspectRatio, duration } = options;
+
+    // Simulate generation delay
+    await new Promise(resolve => setTimeout(resolve, 5000));
+
+    // Return placeholder video based on aspect ratio
+    const placeholderVideos = {
+      '16:9': 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+      '9:16': 'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+      '1:1': 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    };
+
+    const videoUrl = placeholderVideos[aspectRatio as keyof typeof placeholderVideos] || 
+                    'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+
     return {
       success: true,
-      videoUrl: this.generatePlaceholderVideoUrl(options),
+      videoUrl,
       status: VideoStatus.COMPLETED,
-      progress: 100
+      progress: 100,
     };
   }
 
   /**
-   * Generate a placeholder video URL based on options
-   * Using Pexels placeholder service for realistic video placeholders
+   * Simulate progress updates for a video generation job
+   * Useful for polling status updates
    */
-  private generatePlaceholderVideoUrl(options: VideoGenerationOptions): string {
-    const { aspectRatio, duration } = options;
+  async simulateProgress(jobId: string): Promise<{ progress: number; status: VideoStatus }> {
+    // Simulate progress over time
+    const progress = Math.min(100, Math.floor(Math.random() * 30) + 10);
     
-    // Map aspect ratio to dimensions
-    const dimensions: Record<string, { width: number; height: number }> = {
-      '16:9': { width: 1920, height: 1080 },
-      '9:16': { width: 1080, height: 1920 },
-      '1:1': { width: 1080, height: 1080 }
-    };
-    
-    const { width, height } = dimensions[aspectRatio] || dimensions['16:9'];
-    
-    // Use Pexels placeholder service with different categories based on style
-    const categories = ['nature', 'technology', 'business', 'people', 'abstract'];
-    const randomCategory = categories[Math.floor(Math.random() * categories.length)];
-    
-    // Generate a unique ID for cache busting
-    const uniqueId = Date.now();
-    
-    return `https://images.pexels.com/videos/1234567/free-video-${randomCategory}-${width}x${height}.mp4?auto=compress&cs=tinysrgb&h=${height}&w=${width}&dpr=2&cache=${uniqueId}`;
+    let status: VideoStatus = VideoStatus.PROCESSING;
+    if (progress >= 100) {
+      status = VideoStatus.COMPLETED;
+    }
+
+    return { progress, status };
   }
 
   /**
-   * Check if OpenRouter API is configured
+   * Get estimated cost for video generation based on duration and style
    */
-  public isOpenRouterConfigured(): boolean {
-    return !!this.openRouterApiKey;
-  }
+  estimateCost(duration: number, style: string): number {
+    const baseCost = 1; // 1 credit per 5 seconds
+    const styleMultiplier = {
+      cinematic: 1.5,
+      animated: 2.0,
+      minimal: 1.0,
+      bold: 1.3,
+    }[style] || 1.0;
 
-  /**
-   * Get estimated generation time based on duration and style
-   */
-  public getEstimatedTime(duration: number, style?: string): number {
-    let baseTime = duration * 100; // 100ms per second of video
-    if (style === 'animated') baseTime *= 1.5;
-    if (style === 'cinematic') baseTime *= 1.2;
-    return Math.min(baseTime, 60000); // Max 60 seconds
+    return Math.ceil((duration / 5) * baseCost * styleMultiplier);
   }
 }
 
 // Export singleton instance
-export const videoGenerationService = VideoGenerationService.getInstance();
+export const videoGenerationService = new VideoGenerationService();
 
 // Export convenience function
 export async function generateVideo(
@@ -187,11 +215,9 @@ export async function generateVideo(
   aspectRatio: '16:9' | '9:16' | '1:1' = '16:9',
   duration: number = 15
 ): Promise<VideoGenerationResult> {
-  const service = VideoGenerationService.getInstance();
-  return service.generateVideo({
+  return videoGenerationService.generateVideo({
     prompt,
     aspectRatio,
     duration,
-    style: 'cinematic'
   });
 }
