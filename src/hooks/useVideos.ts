@@ -9,7 +9,6 @@ interface UseVideosReturn {
   error: string | null
   refetch: () => Promise<void>
   deleteVideo: (id: string) => Promise<boolean>
-  getVideoById: (id: string) => Video | undefined
 }
 
 export function useVideos(): UseVideosReturn {
@@ -29,10 +28,10 @@ export function useVideos(): UseVideosReturn {
       }
       
       const data = await response.json()
-      setVideos(data.videos || data)
+      setVideos(data)
     } catch (err) {
-      console.error('Error fetching videos:', err)
       setError(err instanceof Error ? err.message : 'Failed to load videos')
+      console.error('Error fetching videos:', err)
     } finally {
       setLoading(false)
     }
@@ -48,9 +47,8 @@ export function useVideos(): UseVideosReturn {
         throw new Error(`Failed to delete video: ${response.status}`)
       }
 
-      // Optimistically remove the video from state
+      // Remove the deleted video from state
       setVideos(prev => prev.filter(video => video.id !== id))
-      
       return true
     } catch (err) {
       console.error('Error deleting video:', err)
@@ -58,10 +56,6 @@ export function useVideos(): UseVideosReturn {
       return false
     }
   }, [])
-
-  const getVideoById = useCallback((id: string): Video | undefined => {
-    return videos.find(video => video.id === id)
-  }, [videos])
 
   // Poll for updates on processing videos
   useEffect(() => {
@@ -71,6 +65,7 @@ export function useVideos(): UseVideosReturn {
 
     const interval = setInterval(async () => {
       try {
+        // Fetch fresh data for all processing videos
         const updatedVideos = await Promise.all(
           processingVideos.map(async (video) => {
             const response = await fetch(`/api/generate/status/${video.id}`)
@@ -81,16 +76,17 @@ export function useVideos(): UseVideosReturn {
           })
         )
 
+        // Update only the processing videos in state
         setVideos(prev => 
           prev.map(video => {
-            const updated = updatedVideos.find(uv => uv.id === video.id)
+            const updated = updatedVideos.find(u => u.id === video.id)
             return updated || video
           })
         )
       } catch (err) {
         console.error('Error polling video status:', err)
       }
-    }, 3000) // Poll every 3 seconds
+    }, 2000) // Poll every 2 seconds
 
     return () => clearInterval(interval)
   }, [videos])
@@ -106,6 +102,5 @@ export function useVideos(): UseVideosReturn {
     error,
     refetch: fetchVideos,
     deleteVideo,
-    getVideoById,
   }
 }
