@@ -1,338 +1,271 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
-import { Check, X } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { Check, X, Zap, Crown, Building } from 'lucide-react'
 
-interface PricingTier {
-  id: string
-  name: string
-  description: string
-  price: string
-  period: string
-  credits: string
-  features: string[]
-  limitations: string[]
-  ctaText: string
-  ctaLink: string
-  highlighted: boolean
-  color: string
-}
-
-const pricingTiers: PricingTier[] = [
+const tiers = [
   {
-    id: 'free',
     name: 'Free',
-    description: 'Perfect for trying out AI video generation',
     price: '£0',
-    period: 'per month',
-    credits: '10 credits',
+    description: 'Perfect for trying out AI video generation',
+    icon: Zap,
+    color: 'from-gray-500 to-gray-700',
+    buttonColor: 'bg-gray-700 hover:bg-gray-600',
     features: [
-      '720p video resolution',
-      'Up to 10 seconds per video',
-      'Basic video templates',
-      'Watermarked output',
-      'Community support',
-      '5 videos per month'
+      { text: '10 credits per month', included: true },
+      { text: '720p video resolution', included: true },
+      { text: '10 second max duration', included: true },
+      { text: 'Basic templates', included: true },
+      { text: 'Watermarked videos', included: true },
+      { text: 'Standard generation speed', included: true },
+      { text: 'Community support', included: true },
+      { text: '1080p resolution', included: false },
+      { text: 'Priority generation', included: false },
+      { text: 'Custom branding', included: false },
+      { text: 'API access', included: false },
+      { text: 'Dedicated support', included: false },
     ],
-    limitations: [
-      'No priority generation',
-      'No custom branding',
-      'Limited to 3 styles'
-    ],
-    ctaText: 'Get Started Free',
-    ctaLink: '/generate',
-    highlighted: false,
-    color: 'border-gray-700'
+    cta: 'Get Started',
+    popular: false,
   },
   {
-    id: 'pro',
     name: 'Pro',
-    description: 'For creators and small businesses',
     price: '£19',
-    period: 'per month',
-    credits: '500 credits',
+    description: 'For creators and small businesses',
+    icon: Crown,
+    color: 'from-orange-500 to-orange-700',
+    buttonColor: 'bg-orange-600 hover:bg-orange-500',
     features: [
-      '1080p video resolution',
-      'Up to 60 seconds per video',
-      'All premium templates',
-      'No watermark',
-      'Priority generation',
-      'Commercial license',
-      'Custom aspect ratios',
-      'Advanced styles & effects'
+      { text: '500 credits per month', included: true },
+      { text: '1080p video resolution', included: true },
+      { text: '60 second max duration', included: true },
+      { text: 'All templates', included: true },
+      { text: 'No watermark', included: true },
+      { text: 'Priority generation', included: true },
+      { text: 'Email support', included: true },
+      { text: '4K resolution', included: false },
+      { text: 'Custom branding', included: false },
+      { text: 'API access', included: false },
+      { text: 'Dedicated support', included: false },
+      { text: 'Custom templates', included: false },
     ],
-    limitations: [
-      'No 4K resolution',
-      'Limited to 1000 videos/month'
-    ],
-    ctaText: 'Start Pro Trial',
-    ctaLink: '/dashboard?plan=pro',
-    highlighted: true,
-    color: 'border-orange-500'
+    cta: 'Upgrade to Pro',
+    popular: true,
   },
   {
-    id: 'business',
     name: 'Business',
-    description: 'For agencies and large teams',
     price: '£49',
-    period: 'per month',
-    credits: 'Unlimited',
+    description: 'For agencies and large teams',
+    icon: Building,
+    color: 'from-purple-500 to-purple-700',
+    buttonColor: 'bg-purple-600 hover:bg-purple-500',
     features: [
-      '4K video resolution',
-      'Unlimited video length',
-      'Custom branding',
-      'White-label output',
-      'Highest priority generation',
-      'Team collaboration',
-      'API access',
-      'Custom templates',
-      'Dedicated support',
-      'Analytics dashboard'
+      { text: 'Unlimited credits', included: true },
+      { text: '4K video resolution', included: true },
+      { text: 'Unlimited duration', included: true },
+      { text: 'All templates + custom', included: true },
+      { text: 'Custom branding', included: true },
+      { text: 'Highest priority', included: true },
+      { text: 'API access', included: true },
+      { text: 'Dedicated support', included: true },
+      { text: 'Team collaboration', included: true },
+      { text: 'Analytics dashboard', included: true },
+      { text: 'White-label option', included: true },
+      { text: 'Custom AI training', included: true },
     ],
-    limitations: [],
-    ctaText: 'Contact Sales',
-    ctaLink: '/contact',
-    highlighted: false,
-    color: 'border-purple-500'
-  }
+    cta: 'Contact Sales',
+    popular: false,
+  },
 ]
 
-const featureComparison = [
+const faqs = [
   {
-    name: 'Video Resolution',
-    free: '720p',
-    pro: '1080p',
-    business: '4K'
+    question: 'What are credits?',
+    answer: 'Credits are used to generate videos. Each video generation consumes credits based on duration and resolution. 1 credit = 1 second of 720p video.',
   },
   {
-    name: 'Max Video Duration',
-    free: '10 seconds',
-    pro: '60 seconds',
-    business: 'Unlimited'
+    question: 'Can I cancel anytime?',
+    answer: 'Yes, you can cancel your subscription at any time. You\'ll retain access until the end of your billing period.',
   },
   {
-    name: 'Monthly Credits',
-    free: '10',
-    pro: '500',
-    business: 'Unlimited'
+    question: 'Do unused credits roll over?',
+    answer: 'Unused credits roll over for up to 3 months on Pro and Business plans. Free plan credits reset monthly.',
   },
   {
-    name: 'Watermark',
-    free: 'Yes',
-    pro: 'No',
-    business: 'No'
+    question: 'What payment methods do you accept?',
+    answer: 'We accept all major credit cards, PayPal, and bank transfers for Business plans.',
   },
   {
-    name: 'Priority Generation',
-    free: 'No',
-    pro: 'Yes',
-    business: 'Highest'
+    question: 'Is there a free trial?',
+    answer: 'Yes! The Free plan is completely free forever. You can upgrade to Pro with a 14-day money-back guarantee.',
   },
   {
-    name: 'Commercial License',
-    free: 'No',
-    pro: 'Yes',
-    business: 'Yes'
+    question: 'Can I change plans later?',
+    answer: 'Absolutely! You can upgrade or downgrade your plan at any time. Changes take effect immediately.',
   },
-  {
-    name: 'Custom Branding',
-    free: 'No',
-    pro: 'Limited',
-    business: 'Full'
-  },
-  {
-    name: 'API Access',
-    free: 'No',
-    pro: 'No',
-    business: 'Yes'
-  },
-  {
-    name: 'Support',
-    free: 'Community',
-    pro: 'Email',
-    business: 'Dedicated'
-  }
 ]
 
 export default function PricingPage() {
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly')
+  const router = useRouter()
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
 
-  const calculateYearlyPrice = (monthlyPrice: string): string => {
-    const price = parseInt(monthlyPrice.replace('£', ''))
-    if (isNaN(price)) return monthlyPrice
-    const yearlyPrice = price * 12 * 0.8 // 20% discount
-    return `£${yearlyPrice.toFixed(0)}`
+  const handleSelectPlan = (planName: string) => {
+    if (planName === 'Free') {
+      router.push('/generate')
+    } else if (planName === 'Pro') {
+      // In a real app, this would redirect to Stripe checkout
+      alert('Pro plan checkout would open here. In production, this would integrate with Stripe.')
+    } else {
+      router.push('mailto:sales@t4n-ads.com?subject=Business%20Plan%20Inquiry')
+    }
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f11] text-white">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-orange-500 to-yellow-500 bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-orange-500 to-orange-300 bg-clip-text text-transparent">
             Simple, Transparent Pricing
           </h1>
-          <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto">
-            Choose the perfect plan for your video creation needs. All plans include our core AI video generation features.
+          <p className="text-xl text-gray-300 mb-8">
+            Choose the perfect plan for your video creation needs. No hidden fees, no surprises.
           </p>
-
+          
           {/* Billing Toggle */}
-          <div className="inline-flex items-center bg-gray-900 rounded-full p-1 mb-12">
+          <div className="inline-flex items-center bg-gray-800 rounded-full p-1 mb-12">
             <button
-              onClick={() => setBillingPeriod('monthly')}
+              onClick={() => setBillingCycle('monthly')}
               className={cn(
                 'px-6 py-2 rounded-full text-sm font-medium transition-all',
-                billingPeriod === 'monthly'
-                  ? 'bg-orange-500 text-white'
+                billingCycle === 'monthly'
+                  ? 'bg-orange-600 text-white'
                   : 'text-gray-400 hover:text-white'
               )}
             >
               Monthly
             </button>
             <button
-              onClick={() => setBillingPeriod('yearly')}
+              onClick={() => setBillingCycle('yearly')}
               className={cn(
                 'px-6 py-2 rounded-full text-sm font-medium transition-all',
-                billingPeriod === 'yearly'
-                  ? 'bg-orange-500 text-white'
+                billingCycle === 'yearly'
+                  ? 'bg-orange-600 text-white'
                   : 'text-gray-400 hover:text-white'
               )}
             >
-              Yearly <span className="ml-1 text-xs bg-green-500 text-white px-2 py-0.5 rounded-full">Save 20%</span>
+              Yearly <span className="ml-1 text-xs bg-green-600 px-2 py-0.5 rounded-full">Save 20%</span>
             </button>
           </div>
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-20">
-          {pricingTiers.map((tier) => (
+        <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto mb-20">
+          {tiers.map((tier) => (
             <div
-              key={tier.id}
+              key={tier.name}
               className={cn(
-                'relative rounded-2xl border-2 p-8 transition-all hover:scale-[1.02]',
-                tier.highlighted
-                  ? 'bg-gray-900/50 border-orange-500 shadow-2xl shadow-orange-500/20'
-                  : 'bg-gray-900/30 border-gray-700 hover:border-gray-600',
-                tier.color
+                'relative rounded-2xl p-8 border transition-all hover:scale-[1.02]',
+                tier.popular
+                  ? 'border-orange-500 bg-gradient-to-b from-gray-900 to-gray-950 shadow-2xl shadow-orange-500/20'
+                  : 'border-gray-800 bg-gray-900/50'
               )}
             >
-              {tier.highlighted && (
+              {tier.popular && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-orange-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                  <span className="bg-gradient-to-r from-orange-500 to-orange-700 text-white px-4 py-1 rounded-full text-sm font-semibold">
                     Most Popular
                   </span>
                 </div>
               )}
 
               <div className="mb-8">
-                <h3 className="text-2xl font-bold mb-2">{tier.name}</h3>
-                <p className="text-gray-400 mb-6">{tier.description}</p>
-                
-                <div className="flex items-baseline mb-2">
-                  <span className="text-5xl font-bold">
-                    {billingPeriod === 'yearly' ? calculateYearlyPrice(tier.price) : tier.price}
-                  </span>
-                  <span className="text-gray-400 ml-2">{tier.period}</span>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className={`p-3 rounded-lg bg-gradient-to-br ${tier.color}`}>
+                    <tier.icon className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-2xl font-bold">{tier.name}</h3>
                 </div>
                 
-                <div className="text-lg font-semibold text-orange-400 mb-6">
-                  {tier.credits}
+                <div className="mb-4">
+                  <span className="text-5xl font-bold">{tier.price}</span>
+                  <span className="text-gray-400">/{billingCycle === 'yearly' ? 'year' : 'month'}</span>
                 </div>
+                
+                <p className="text-gray-300">{tier.description}</p>
               </div>
 
-              <div className="mb-8">
-                <h4 className="font-semibold mb-4 text-lg">Features</h4>
-                <ul className="space-y-3">
-                  {tier.features.map((feature, index) => (
-                    <li key={index} className="flex items-start">
-                      <Check className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {tier.limitations.length > 0 && (
-                <div className="mb-8">
-                  <h4 className="font-semibold mb-4 text-lg text-gray-400">Limitations</h4>
-                  <ul className="space-y-3">
-                    {tier.limitations.map((limitation, index) => (
-                      <li key={index} className="flex items-start">
-                        <X className="w-5 h-5 text-red-500 mr-3 flex-shrink-0 mt-0.5" />
-                        <span className="text-gray-400">{limitation}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              <Link
-                href={tier.ctaLink}
+              <button
+                onClick={() => handleSelectPlan(tier.name)}
                 className={cn(
-                  'block w-full text-center py-3 px-6 rounded-lg font-semibold transition-all',
-                  tier.highlighted
-                    ? 'bg-orange-500 hover:bg-orange-600 text-white'
-                    : 'bg-gray-800 hover:bg-gray-700 text-white'
+                  'w-full py-3 rounded-lg font-semibold transition-all mb-8',
+                  tier.buttonColor,
+                  tier.popular && 'shadow-lg shadow-orange-500/30'
                 )}
               >
-                {tier.ctaText}
-              </Link>
+                {tier.cta}
+              </button>
+
+              <ul className="space-y-4">
+                {tier.features.map((feature, index) => (
+                  <li key={index} className="flex items-start gap-3">
+                    {feature.included ? (
+                      <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                    ) : (
+                      <X className="w-5 h-5 text-gray-600 flex-shrink-0 mt-0.5" />
+                    )}
+                    <span className={feature.included ? 'text-gray-200' : 'text-gray-600'}>
+                      {feature.text}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
           ))}
         </div>
 
         {/* Feature Comparison Table */}
-        <div className="max-w-6xl mx-auto mb-20">
-          <h2 className="text-3xl font-bold text-center mb-12">Compare All Features</h2>
-          
+        <div className="max-w-7xl mx-auto mb-20">
+          <h2 className="text-3xl font-bold text-center mb-12">Plan Comparison</h2>
           <div className="overflow-x-auto rounded-xl border border-gray-800">
             <table className="w-full">
               <thead>
-                <tr className="bg-gray-900/50">
-                  <th className="text-left p-6 font-semibold">Feature</th>
-                  <th className="text-center p-6 font-semibold">Free</th>
-                  <th className="text-center p-6 font-semibold bg-orange-500/10">Pro</th>
-                  <th className="text-center p-6 font-semibold">Business</th>
+                <tr className="border-b border-gray-800">
+                  <th className="text-left p-6 font-semibold text-gray-300">Feature</th>
+                  {tiers.map((tier) => (
+                    <th key={tier.name} className="text-center p-6 font-semibold">
+                      <div className="flex flex-col items-center">
+                        <span className="text-lg">{tier.name}</span>
+                        <span className="text-sm text-gray-400">{tier.price}/month</span>
+                      </div>
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {featureComparison.map((feature, index) => (
-                  <tr 
-                    key={feature.name} 
-                    className={cn(
-                      'border-t border-gray-800',
-                      index % 2 === 0 ? 'bg-gray-900/20' : 'bg-gray-900/10'
-                    )}
-                  >
-                    <td className="p-6 font-medium">{feature.name}</td>
+                {[
+                  { feature: 'Video Credits', free: '10/mo', pro: '500/mo', business: 'Unlimited' },
+                  { feature: 'Max Resolution', free: '720p', pro: '1080p', business: '4K' },
+                  { feature: 'Max Duration', free: '10s', pro: '60s', business: 'Unlimited' },
+                  { feature: 'Watermark', free: 'Yes', pro: 'No', business: 'No' },
+                  { feature: 'Generation Priority', free: 'Standard', pro: 'High', business: 'Highest' },
+                  { feature: 'Custom Branding', free: 'No', pro: 'No', business: 'Yes' },
+                  { feature: 'API Access', free: 'No', pro: 'No', business: 'Yes' },
+                  { feature: 'Support', free: 'Community', pro: 'Email', business: 'Dedicated' },
+                  { feature: 'Team Collaboration', free: 'No', pro: 'No', business: 'Yes' },
+                ].map((row, index) => (
+                  <tr key={index} className={index % 2 === 0 ? 'bg-gray-900/50' : ''}>
+                    <td className="p-6 font-medium text-gray-300">{row.feature}</td>
                     <td className="text-center p-6">
-                      <span className={cn(
-                        'px-3 py-1 rounded-full text-sm',
-                        feature.free === 'No' 
-                          ? 'bg-red-500/20 text-red-400' 
-                          : 'bg-green-500/20 text-green-400'
-                      )}>
-                        {feature.free}
-                      </span>
-                    </td>
-                    <td className="text-center p-6 bg-orange-500/5">
-                      <span className={cn(
-                        'px-3 py-1 rounded-full text-sm',
-                        feature.pro === 'No' 
-                          ? 'bg-red-500/20 text-red-400' 
-                          : feature.pro === 'Limited'
-                          ? 'bg-yellow-500/20 text-yellow-400'
-                          : 'bg-green-500/20 text-green-400'
-                      )}>
-                        {feature.pro}
-                      </span>
+                      <span className="px-3 py-1 bg-gray-800 rounded-full text-sm">{row.free}</span>
                     </td>
                     <td className="text-center p-6">
-                      <span className="px-3 py-1 rounded-full text-sm bg-green-500/20 text-green-400">
-                        {feature.business}
-                      </span>
+                      <span className="px-3 py-1 bg-orange-900/30 text-orange-300 rounded-full text-sm">{row.pro}</span>
+                    </td>
+                    <td className="text-center p-6">
+                      <span className="px-3 py-1 bg-purple-900/30 text-purple-300 rounded-full text-sm">{row.business}</span>
                     </td>
                   </tr>
                 ))}
@@ -342,63 +275,44 @@ export default function PricingPage() {
         </div>
 
         {/* FAQ Section */}
-        <div className="max-w-4xl mx-auto mb-20">
+        <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
-          
-          <div className="space-y-6">
-            <div className="bg-gray-900/30 rounded-xl p-6">
-              <h3 className="text-xl font-semibold mb-3">What counts as a credit?</h3>
-              <p className="text-gray-400">
-                One credit equals one second of generated video. A 30-second video would use 30 credits. Credits reset at the beginning of each billing cycle.
-              </p>
-            </div>
-            
-            <div className="bg-gray-900/30 rounded-xl p-6">
-              <h3 className="text-xl font-semibold mb-3">Can I upgrade or downgrade my plan?</h3>
-              <p className="text-gray-400">
-                Yes, you can change your plan at any time. When upgrading, you'll get immediate access to new features. When downgrading, changes take effect at the end of your current billing cycle.
-              </p>
-            </div>
-            
-            <div className="bg-gray-900/30 rounded-xl p-6">
-              <h3 className="text-xl font-semibold mb-3">Do you offer refunds?</h3>
-              <p className="text-gray-400">
-                We offer a 14-day money-back guarantee for all paid plans. If you're not satisfied with our service, contact our support team for a full refund.
-              </p>
-            </div>
-            
-            <div className="bg-gray-900/30 rounded-xl p-6">
-              <h3 className="text-xl font-semibold mb-3">Is there a free trial for paid plans?</h3>
-              <p className="text-gray-400">
-                Yes! All paid plans come with a 7-day free trial. You won't be charged until the trial ends, and you can cancel anytime during the trial period.
-              </p>
-            </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            {faqs.map((faq, index) => (
+              <div
+                key={index}
+                className="bg-gray-900/50 border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition-colors"
+              >
+                <h3 className="text-lg font-semibold mb-3 text-gray-200">{faq.question}</h3>
+                <p className="text-gray-400">{faq.answer}</p>
+              </div>
+            ))}
           </div>
         </div>
 
         {/* CTA Section */}
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-12">
-            <h2 className="text-4xl font-bold mb-6">Ready to create amazing videos?</h2>
-            <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
-              Join thousands of creators and businesses using T4N Ads to generate stunning video content.
+        <div className="max-w-4xl mx-auto mt-20 text-center">
+          <div className="bg-gradient-to-r from-gray-900 to-black border border-gray-800 rounded-2xl p-12">
+            <h2 className="text-4xl font-bold mb-4">Ready to create amazing videos?</h2>
+            <p className="text-xl text-gray-300 mb-8">
+              Join thousands of creators and businesses using T4N Ads
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/generate"
-                className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-8 rounded-lg transition-all"
+              <button
+                onClick={() => router.push('/generate')}
+                className="px-8 py-3 bg-gradient-to-r from-orange-600 to-orange-500 rounded-lg font-semibold hover:from-orange-500 hover:to-orange-400 transition-all"
               >
                 Start Free Trial
-              </Link>
-              <Link
-                href="/contact"
-                className="bg-gray-800 hover:bg-gray-700 text-white font-semibold py-3 px-8 rounded-lg transition-all border border-gray-700"
+              </button>
+              <button
+                onClick={() => router.push('/contact')}
+                className="px-8 py-3 border border-gray-700 rounded-lg font-semibold hover:border-gray-600 hover:bg-gray-800/50 transition-all"
               >
-                Contact Sales
-              </Link>
+                Schedule a Demo
+              </button>
             </div>
-            <p className="text-gray-500 mt-6 text-sm">
-              No credit card required for free plan • Cancel anytime • 14-day money-back guarantee
+            <p className="text-gray-500 text-sm mt-6">
+              No credit card required for Free plan • 14-day money-back guarantee on Pro
             </p>
           </div>
         </div>
