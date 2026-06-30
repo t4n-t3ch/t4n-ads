@@ -1,44 +1,41 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
-import { Session, User } from '@supabase/supabase-js'
-import { supabase } from '@/lib/supabase'
+import type { User, Session } from '@supabase/supabase-js'
 
 export function useAuth() {
   const [session, setSession] = useState<Session | null>(null)
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
+  
+  const supabase = createClientComponentClient()
 
   useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
+    const getSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession()
         setSession(session)
         setUser(session?.user ?? null)
       } catch (error) {
-        console.error('Error getting session:', error)
+        console.error('Error fetching session:', error)
       } finally {
         setLoading(false)
       }
     }
 
-    getInitialSession()
+    getSession()
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session)
         setUser(session?.user ?? null)
         setLoading(false)
-
-        // Redirect on sign in/out
-        if (event === 'SIGNED_IN') {
-          router.refresh()
-        } else if (event === 'SIGNED_OUT') {
-          router.push('/login')
+        
+        // Refresh router on auth state changes
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
           router.refresh()
         }
       }
@@ -47,11 +44,12 @@ export function useAuth() {
     return () => {
       subscription.unsubscribe()
     }
-  }, [router])
+  }, [supabase, router])
 
   const signOut = async () => {
     try {
       await supabase.auth.signOut()
+      router.refresh()
       router.push('/login')
     } catch (error) {
       console.error('Error signing out:', error)
@@ -66,6 +64,7 @@ export function useAuth() {
           redirectTo: `${window.location.origin}/api/auth/callback`,
         },
       })
+      
       if (error) throw error
     } catch (error) {
       console.error('Error signing in with Google:', error)
@@ -79,6 +78,7 @@ export function useAuth() {
         email,
         password,
       })
+      
       if (error) throw error
     } catch (error) {
       console.error('Error signing in with email:', error)
@@ -95,9 +95,10 @@ export function useAuth() {
           emailRedirectTo: `${window.location.origin}/api/auth/callback`,
         },
       })
+      
       if (error) throw error
     } catch (error) {
-      console.error('Error signing up:', error)
+      console.error('Error signing up with email:', error)
       throw error
     }
   }
@@ -107,33 +108,10 @@ export function useAuth() {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       })
+      
       if (error) throw error
     } catch (error) {
       console.error('Error resetting password:', error)
-      throw error
-    }
-  }
-
-  const updatePassword = async (newPassword: string) => {
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      })
-      if (error) throw error
-    } catch (error) {
-      console.error('Error updating password:', error)
-      throw error
-    }
-  }
-
-  const updateProfile = async (updates: { display_name?: string; avatar_url?: string }) => {
-    try {
-      const { error } = await supabase.auth.updateUser({
-        data: updates,
-      })
-      if (error) throw error
-    } catch (error) {
-      console.error('Error updating profile:', error)
       throw error
     }
   }
@@ -142,13 +120,11 @@ export function useAuth() {
     session,
     user,
     loading,
+    isAuthenticated: !!user,
     signOut,
     signInWithGoogle,
     signInWithEmail,
     signUpWithEmail,
     resetPassword,
-    updatePassword,
-    updateProfile,
-    isAuthenticated: !!user,
   }
 }
