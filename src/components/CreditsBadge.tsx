@@ -1,25 +1,24 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { useCredits } from '@/hooks/useCredits'
 import { cn } from '@/lib/utils'
 import { CreditCard, AlertTriangle, Plus } from 'lucide-react'
+import Link from 'next/link'
 
 interface CreditsBadgeProps {
   showLabel?: boolean
-  showTopUp?: boolean
+  showWarning?: boolean
   className?: string
   compact?: boolean
 }
 
 export default function CreditsBadge({
   showLabel = true,
-  showTopUp = true,
+  showWarning = true,
   className,
-  compact = false,
+  compact = false
 }: CreditsBadgeProps) {
-  const router = useRouter()
   const { credits, loading, error, refetch } = useCredits()
   const [isLow, setIsLow] = useState(false)
 
@@ -31,88 +30,104 @@ export default function CreditsBadge({
     }
   }, [credits])
 
-  const handleTopUp = () => {
-    router.push('/pricing')
-  }
-
   if (loading) {
     return (
-      <div className={cn('flex items-center gap-2', className)}>
-        <div className="h-4 w-16 animate-pulse rounded bg-gray-700"></div>
+      <div className={cn(
+        "flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-800/50 animate-pulse",
+        className
+      )}>
+        <div className="w-4 h-4 bg-gray-700 rounded-full"></div>
+        {showLabel && !compact && (
+          <div className="h-4 w-16 bg-gray-700 rounded"></div>
+        )}
       </div>
     )
   }
 
-  if (error) {
+  if (error || credits === null) {
     return (
-      <div className={cn('flex items-center gap-2', className)}>
-        <span className="text-sm text-red-400">Error loading credits</span>
+      <div className={cn(
+        "flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20",
+        className
+      )}>
+        <CreditCard className="w-4 h-4 text-red-400" />
+        <span className="text-sm text-red-400">Error</span>
       </div>
     )
   }
+
+  const badgeContent = (
+    <>
+      <div className="flex items-center gap-2">
+        <CreditCard className={cn(
+          "w-4 h-4",
+          isLow ? "text-amber-400" : "text-gray-300"
+        )} />
+        
+        {showLabel && !compact && (
+          <span className="text-sm text-gray-300">Credits:</span>
+        )}
+        
+        <span className={cn(
+          "font-semibold",
+          isLow ? "text-amber-400" : "text-white"
+        )}>
+          {credits.toLocaleString()}
+        </span>
+
+        {isLow && showWarning && (
+          <AlertTriangle className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+        )}
+      </div>
+
+      {isLow && showWarning && !compact && (
+        <div className="absolute top-full left-0 right-0 mt-1 px-2 py-1 text-xs bg-amber-500/10 border border-amber-500/20 rounded text-amber-400 text-center">
+          Low credits! Add more to continue.
+        </div>
+      )}
+    </>
+  )
 
   if (compact) {
     return (
-      <div className={cn('flex items-center gap-2', className)}>
-        <CreditCard className="h-4 w-4 text-gray-400" />
-        <span className="text-sm font-medium text-white">{credits}</span>
-        {isLow && (
-          <AlertTriangle className="h-3 w-3 text-amber-500" />
-        )}
+      <div className={cn(
+        "relative inline-flex items-center px-3 py-1.5 rounded-lg",
+        isLow 
+          ? "bg-amber-500/10 border border-amber-500/20" 
+          : "bg-gray-800/50 border border-gray-700/50",
+        className
+      )}>
+        {badgeContent}
       </div>
     )
   }
 
   return (
-    <div className={cn('flex items-center gap-3', className)}>
-      <div className="flex items-center gap-2">
-        <div className="relative">
-          <CreditCard className="h-5 w-5 text-gray-400" />
-          {isLow && (
-            <div className="absolute -right-1 -top-1">
-              <div className="relative">
-                <AlertTriangle className="h-3 w-3 text-amber-500" />
-                <div className="absolute inset-0 animate-ping rounded-full bg-amber-500 opacity-20"></div>
-              </div>
-            </div>
-          )}
-        </div>
-        
-        {showLabel && (
-          <span className="text-sm font-medium text-gray-300">Credits:</span>
-        )}
-        
-        <div className="flex items-center gap-2">
-          <span className={cn(
-            'text-lg font-bold',
-            isLow ? 'text-amber-400' : 'text-white'
-          )}>
-            {credits}
-          </span>
-          
-          {isLow && (
-            <div className="flex items-center gap-1 rounded-full bg-amber-900/30 px-2 py-1">
-              <AlertTriangle className="h-3 w-3 text-amber-400" />
-              <span className="text-xs font-medium text-amber-400">Low</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {showTopUp && (
-        <button
-          onClick={handleTopUp}
-          className={cn(
-            'flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-all',
-            isLow
-              ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:from-amber-700 hover:to-orange-700'
-              : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white'
-          )}
-        >
-          <Plus className="h-4 w-4" />
-          <span>Top Up</span>
-        </button>
+    <Link 
+      href="/pricing" 
+      className={cn(
+        "group relative inline-flex items-center px-4 py-2 rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98]",
+        isLow 
+          ? "bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/15" 
+          : "bg-gray-800/50 border border-gray-700/50 hover:bg-gray-800/70",
+        className
       )}
-    </div>
+      onClick={(e) => {
+        if (isLow) {
+          e.preventDefault()
+          // In a real app, you might want to show a modal or redirect to checkout
+          window.location.href = '/pricing?highlight=credits'
+        }
+      }}
+    >
+      {badgeContent}
+      
+      <div className="ml-3 flex items-center gap-1.5">
+        <Plus className="w-3.5 h-3.5 text-gray-400 group-hover:text-orange-400 transition-colors" />
+        <span className="text-sm text-gray-400 group-hover:text-orange-400 transition-colors">
+          Add
+        </span>
+      </div>
+    </Link>
   )
 }
