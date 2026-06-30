@@ -1,13 +1,14 @@
-import React from 'react';
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import Navbar from '@/components/Navbar'
+import Footer from '@/components/Footer'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 't4n-ads-video',
-  description: 'Generate video ads with AI',
+  title: 'T4N Ads - AI Video Ad Generation Platform',
+  description: 'Create professional AI video ads in seconds. Generate, customize, and publish video ads with our AI-powered platform.',
 }
 
 export default function RootLayout({
@@ -17,8 +18,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.className} bg-gray-900 text-white`}>
-        {children}
+      <body className={`${inter.className} bg-gray-950 text-gray-100 min-h-screen flex flex-col`}>
+        <Navbar />
+        <main className="flex-1">
+          {children}
+        </main>
+        <Footer />
       </body>
     </html>
   )
