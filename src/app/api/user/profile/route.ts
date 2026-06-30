@@ -1,13 +1,12 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase'
+import prisma from '@/lib/prisma'
 
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = createClient()
     
-    // Get current session
+    // Get session from Supabase
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()
     
     if (sessionError || !session) {
@@ -16,12 +15,10 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       )
     }
-    
-    const userId = session.user.id
-    
-    // Get user from Prisma, create if doesn't exist
-    let user = await prisma.user.findUnique({
-      where: { id: userId },
+
+    // Get user from Prisma
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
       select: {
         id: true,
         email: true,
@@ -30,14 +27,14 @@ export async function GET(request: NextRequest) {
         updatedAt: true
       }
     })
-    
-    // Create user record if it doesn't exist
+
     if (!user) {
-      user = await prisma.user.create({
+      // Create user if doesn't exist
+      const newUser = await prisma.user.create({
         data: {
-          id: userId,
-          email: session.user.email || '',
-          credits: 10 // Initial free credits
+          id: session.user.id,
+          email: session.user.email!,
+          credits: 10 // Default credits
         },
         select: {
           id: true,
@@ -47,21 +44,13 @@ export async function GET(request: NextRequest) {
           updatedAt: true
         }
       })
+      
+      return NextResponse.json(newUser)
     }
-    
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: user.id,
-        email: user.email,
-        credits: user.credits,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt
-      }
-    })
-    
+
+    return NextResponse.json(user)
   } catch (error) {
-    console.error('Error fetching user profile:', error)
+    console.error('Profile API error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
