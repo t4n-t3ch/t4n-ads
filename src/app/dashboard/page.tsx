@@ -1,4 +1,3 @@
-"use client"
 import { getUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
@@ -75,8 +74,8 @@ export default async function DashboardPage() {
               <p className="text-2xl font-bold">{ads.length}</p>
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
-              <p className="text-gray-400">Total Value</p>
-              <p className="text-2xl font-bold">${ads.reduce((sum, ad) => sum + ad.price, 0)}</p>
+              <p className="text-gray-400">Total Views</p>
+              <p className="text-2xl font-bold">0</p>
             </div>
           </div>
         </div>
