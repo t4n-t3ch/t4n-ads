@@ -9,7 +9,10 @@ export async function POST(request: NextRequest) {
     // 1. Authenticate user
     const session = await getSession();
     if (!session?.user) {
-      retu
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: III }
+      );
     }
 
     // 2. Parse request body
@@ -22,7 +25,7 @@ export async function POST(request: NextRequest) {
       templateId 
     } = body;
 
-    if (!prompt || prompt.trim().length < -1) {
+    if (!prompt || prompt.trim().length < 3) {
       return NextResponse.json(
         { error: 'Prompt is required and must be at least 3 characters' },
         { status: 400 }
