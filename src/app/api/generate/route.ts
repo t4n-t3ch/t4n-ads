@@ -59,8 +59,6 @@ export async function POST(request: NextRequest) {
             status: VideoStatus.COMPLETED,
             progress: 100,
             videoUrl: result.videoUrl,
-            thumbnailUrl: result.thumbnailUrl,
-            metadata: result.metadata,
           },
         });
       } else {
