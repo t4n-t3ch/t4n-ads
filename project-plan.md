@@ -1,2 +1,2 @@
 # Project Plan
-1. src/app/dashboard/page.tsx — Remove "use client" directive to convert to Server Component
+1. src/app/gallery/page.tsx — Remove the `isDeleting` prop from VideoCard component usage
