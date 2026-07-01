@@ -106,7 +106,6 @@ const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(
           className
         )}
         {...props}
-        onClick={() => setOpen(false)}
       >
         <div className="p-1">{children}</div>
       </div>
