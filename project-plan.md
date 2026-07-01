@@ -1,2 +1,2 @@
 # Edit Plan
-1. src/types/index.ts — EDIT: Add optional `views?: number;` and `uses?: number;` fields to the existing `Template` interface
+1. src/components/CreateAd.tsx — EDIT: Change import from `useState` to `useState, useEffect`, remove `useUser` import, replace `useUser()` with `useState` + `useEffect` pattern using existing `supabase` client
