@@ -1,2 +1,4 @@
 # Edit Plan
-1. package.json — EDIT: Replace entire dependencies object to remove unused packages (@radix-ui packages and class-variance-authority), update version numbers for existing packages, and add missing dependencies (@supabase/auth-helpers-nextjs, @supabase/supabase-js, date-fns, react-icons)
+1. src/lib/auth.ts — NEW: Create this file with a getUser() function that uses createServerComponentClient from @supabase/auth-helpers-nextjs to read the current auth session server-side and return the user object or null
+2. src/components/AdCard.tsx — EDIT: Rebuild the broken/incomplete file as a client component with "use client" directive, implementing a card with image, title, price, and a "View" button that navigates to the ad detail page using useRouter
+3. src/app/dashboard/page.tsx — EDIT: Fix the syntax error (add quotes around "use client") and rebuild as a proper client component showing user's ads with AdCard components and a link to create new ads
