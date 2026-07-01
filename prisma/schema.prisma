@@ -17,7 +17,7 @@ enum VideoStatus {
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
-  password      String
+  password      String?
   name          String?
   credits       Int       @default(0)
   createdAt     DateTime  @default(now())
@@ -107,5 +107,3 @@ model Transaction {
   description   String?
   metadata      Json?
   createdAt     DateTime  @default(now())
-  @@map("transactions")
-}
