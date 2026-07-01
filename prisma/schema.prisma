@@ -55,6 +55,10 @@ model Video {
   progress      Int       @default(0)
   metadata      Json?
   error         String?
+  prompt        String?
+  aspectRatio   String?
+  style         String?
+  resolution    String?
 
   @@map("videos")
 }
