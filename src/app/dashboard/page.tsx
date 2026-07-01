@@ -1,6 +1,7 @@
 import { getUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import AdCard from '@/components/AdCard'
 
 // Mock data - in a real app this would come from an API
 const mockAds = [
@@ -50,13 +51,13 @@ export default async function DashboardPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {ads.map((ad) => (
-                <div key={ad.id} className="bg-gray-800 rounded-xl overflow-hidden">
-                  <div className="h-48 bg-gray-700"></div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-lg">{ad.title}</h3>
-                    <p className="text-blue-400 font-bold">${ad.price}</p>
-                  </div>
-                </div>
+                <AdCard
+                  key={ad.id}
+                  id={ad.id}
+                  title={ad.title}
+                  price={ad.price}
+                  image={ad.image}
+                />
               ))}
             </div>
           )}
