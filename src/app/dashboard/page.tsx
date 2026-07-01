@@ -1,4 +1,4 @@
-use client
+"use client"
 
 import { getUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
