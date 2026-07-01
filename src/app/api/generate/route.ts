@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     // 1. Authenticate user
     const session = await getSession();
     if (!session?.user) {
-      retu
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // 2. Parse request body
