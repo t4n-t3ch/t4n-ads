@@ -1,2 +1,2 @@
 # Project Plan
-1. src/app/gallery/page.tsx — Remove the `isDeleting` prop from VideoCard component usage
+1. src/components/ui/select.tsx — Complete Select component implementation with all subcomponents (Select, SelectTrigger, SelectValue, SelectContent, SelectItem) using React Context for state management
