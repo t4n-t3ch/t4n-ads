@@ -11,7 +11,7 @@ const supabase = createClient(
 )
 
 export default function CreateAd() {
-  const [title, setTitle] = useState('')
+  const [title, setTitle] = useState<string>('')
   const [description, setDescription] = useState('')
   const [loading, setLoading] = useState(false)
   const [user, setUser] = useState<any>(null)
