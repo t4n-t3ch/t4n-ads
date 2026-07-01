@@ -1,2 +1,2 @@
 # Edit Plan
-1. tsconfig.json — EDIT: Change "target": "es5" to "target": "es2017" in compilerOptions
+1. src/types/index.ts — EDIT: Add optional `views?: number;` and `uses?: number;` fields to the existing `Template` interface
