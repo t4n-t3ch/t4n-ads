@@ -26,7 +26,7 @@ export default async function DashboardPage() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold">Dashboard</h1>
-            <p className="text-gray-400">Welcome back, {user.name}!</p>
+            <p className="text-gray-400">Welcome back, {user.email}!</p>
           </div>
           <Link
             href="/ads/create"
