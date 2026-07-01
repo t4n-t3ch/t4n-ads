@@ -1,2 +1,2 @@
 # Edit Plan
-1. prisma/schema.prisma — EDIT: Add CreditTransaction and Transaction models at the end of file, and add creditTransactions and transactions relation fields to existing User model
+1. prisma/schema.prisma — EDIT: Add `prompt`, `aspectRatio`, `style`, and `resolution` fields as optional strings to the existing Video model while preserving all existing fields, comments, and model relations.
