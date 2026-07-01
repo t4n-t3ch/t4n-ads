@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import { useState, useEffect } from 'react'
 import { useCredits } from '@/hooks/useCredits'
@@ -109,12 +109,7 @@ export default function CreditsBadge({
         "group relative inline-flex items-center px-4 py-2 rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98]",
         isLow 
           ? "bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/15" 
-          : "bg-gray-800/50 border border-gray-700/50 hover:bg-gray-800/70",
-        className
-      )}
-    >
-      {badgeContent}
-      <Plus className="ml-2 w-4 h-4 text-gray-400 group-hover:text-white transition-colors" />
-    </Link>
-  )
-}
+     
+PROJECT PLAN:
+# Edit Plan
+1. src/components/CreditsBadge.tsx — EDIT: Change `loading` to `isLoading` in two places to match the useCredits hook's return value
