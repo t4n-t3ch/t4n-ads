@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useVideos } from '@/hooks/useVideos'
 import VideoCard from '@/components/VideoCard'
 import VideoModal from '@/components/VideoModal'
-import { FiVideo, FiFilter, FiSearch, FiDownload, FiTrash2, FiRefreshCw } from 'react-icons/fi'
+import { FiVideo, FiFilter, FiSearch, FiTrash2, FiRefreshCw } from 'react-icons/fi'
 
 export default function GalleryPage() {
   const router = useRouter()
@@ -110,145 +110,12 @@ export default function GalleryPage() {
           <p className="text-gray-400 mb-4">{error}</p>
           <button
             onClick={() => refetch()}
-            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    )
-  }
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition
 
-  return (
-    <div className="min-h-screen bg-[#0f0f11] text-white p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">Video Gallery</h1>
-            <p className="text-gray-400 mt-1">Manage and view your generated videos</p>
-          </div>
-          <button
-            onClick={() => refetch()}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            <FiRefreshCw className={loading ? 'animate-spin' : ''} />
-            Refresh
-          </button>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-gray-900 rounded-xl p-4">
-            <div className="text-2xl font-bold">{stats.total}</div>
-            <div className="text-gray-400 text-sm">Total Videos</div>
-          </div>
-          <div className="bg-gray-900 rounded-xl p-4">
-            <div className="text-2xl font-bold text-green-500">{stats.completed}</div>
-            <div className="text-gray-400 text-sm">Completed</div>
-          </div>
-          <div className="bg-gray-900 rounded-xl p-4">
-            <div className="text-2xl font-bold text-yellow-500">{stats.processing}</div>
-            <div className="text-gray-400 text-sm">Processing</div>
-          </div>
-          <div className="bg-gray-900 rounded-xl p-4">
-            <div className="text-2xl font-bold text-red-500">{stats.failed}</div>
-            <div className="text-gray-400 text-sm">Failed</div>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="bg-gray-900 rounded-xl p-4 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Search */}
-            <div className="relative">
-              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search videos..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-gray-800 rounded-lg border border-gray-700 focus:border-orange-500 focus:outline-none"
-              />
-            </div>
-
-            {/* Status Filter */}
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Status</label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-700 focus:border-orange-500 focus:outline-none"
-              >
-                <option value="all">All Status</option>
-                <option value="completed">Completed</option>
-                <option value="processing">Processing</option>
-                <option value="failed">Failed</option>
-              </select>
-            </div>
-
-            {/* Aspect Ratio Filter */}
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Aspect Ratio</label>
-              <select
-                value={aspectRatioFilter}
-                onChange={(e) => setAspectRatioFilter(e.target.value)}
-                className="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-700 focus:border-orange-500 focus:outline-none"
-              >
-                <option value="all">All Ratios</option>
-                <option value="16:9">16:9</option>
-                <option value="9:16">9:16</option>
-                <option value="1:1">1:1</option>
-                <option value="4:5">4:5</option>
-              </select>
-            </div>
-
-            {/* Sort By */}
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Sort By</label>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-700 focus:border-orange-500 focus:outline-none"
-              >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-                <option value="duration">Longest Duration</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Video Grid */}
-        {filteredVideos.length === 0 ? (
-          <div className="text-center py-16">
-            <FiVideo className="mx-auto text-6xl text-gray-700 mb-4" />
-            <h3 className="text-xl font-bold mb-2">No videos found</h3>
-            <p className="text-gray-400">
-              {videos.length === 0 ? 'Create your first video to get started!' : 'Try adjusting your filters'}
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredVideos.map((video) => (
-              <VideoCard
-                key={video.id}
-                video={video}
-                onClick={() => handleVideoClick(video)}
-                onDelete={() => handleDeleteVideo(video.id)}
-                onDownload={() => handleDownload(video)}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Video Modal */}
-      <VideoModal
-        video={selectedVideo}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
-    </div>
-  )
-}
+Write the complete fixed file contents.
+RULES:
+- Output ONLY the raw file content
+- First line must be the file path as a comment: // src/app/gallery/page.tsx
+- No markdown, no backticks, no explanations
+- "use client" MUST be written with double quotes exactly as: "use client" — never without quotes
+- Make the minimal change needed to resolve the specific issue — do not restructure, rename, or rewrite unrelated parts of the file
