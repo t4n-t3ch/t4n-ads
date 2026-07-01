@@ -1,2 +1,2 @@
 # Edit Plan
-1. prisma/schema.prisma — EDIT: Complete the Transaction model by adding the missing closing brace and @@map line
+1. src/app/api/generate/route.ts — EDIT: Update generateVideo function call to match new signature by removing videoId and style parameters, and fix prompt validation logic
