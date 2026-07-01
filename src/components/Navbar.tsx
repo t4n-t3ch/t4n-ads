@@ -1,93 +1,63 @@
 "use client"
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { FaBars, FaTimes } from 'react-icons/fa'
+import Link from 'next/link'
+import { FiSun, FiMoon } from 'react-icons/fi'
 
-const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false)
-  const pathname = usePathname()
+const ThemeToggle = () => {
+  const [darkMode, setDarkMode] = useState(false)
 
-  const navLinks = [
-    { href: '/', label: 'Home' },
-    { href: '/about', label: 'About' },
-    { href: '/contact', label: 'Contact' },
-  ]
-
-  const AuthButton = () => {
-    return (
-      <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-        Sign In
-      </button>
-    )
+  const toggleTheme = () => {
+    setDarkMode(!darkMode)
+    if (!darkMode) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
   }
 
   return (
-    <nav className="bg-white shadow-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <Link href="/" className="text-xl font-bold text-gray-800">
-              Logo
-            </Link>
-            <div className="hidden md:flex ml-10 space-x-4">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`px-3 py-2 rounded-md text-sm font-medium ${
-                    pathname === link.href
-                      ? 'bg-gray-900 text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          <div className="hidden md:flex items-center space-x-4">
-            <AuthButton />
-          </div>
-
-          <div className="md:hidden flex items-center">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-700 hover:text-gray-900"
-            >
-              {isOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {isOpen && (
-        <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`block px-3 py-2 rounded-md text-base font-medium ${
-                  pathname === link.href
-                    ? 'bg-gray-900 text-white'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-                onClick={() => setIsOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
-            <div className="px-3 py-2">
-              <AuthButton />
-            </div>
-          </div>
-        </div>
+    <button
+      onClick={toggleTheme}
+      className="p-2 rounded-lg bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
+      aria-label="Toggle theme"
+    >
+      {darkMode ? (
+        <FiSun className="w-5 h-5 text-yellow-500" />
+      ) : (
+        <FiMoon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
       )}
-    </nav>
+    </button>
   )
 }
 
-export default Navbar
+export default function Navbar() {
+  return (
+    <nav className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center space-x-8">
+          <Link href="/" className="text-xl font-bold text-gray-900 dark:text-white">
+            MyApp
+          </Link>
+          <div className="hidden md:flex space-x-6">
+            <Link href="/dashboard" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+              Dashboard
+            </Link>
+            <Link href="/profile" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+              Profile
+            </Link>
+            <Link href="/settings" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+              Settings
+            </Link>
+          </div>
+        </div>
+        <div className="flex items-center space-x-4">
+          <ThemeToggle />
+          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            Sign In
+          </button>
+        </div>
+      </div>
+    </nav>
+  )
+}
