@@ -1,2 +1,2 @@
 # Edit Plan
-1. prisma/schema.prisma — EDIT: Add VideoStatus enum after datasource block and add status field to Video model after duration field
+1. package.json — EDIT: Add "postinstall": "prisma generate" to the "scripts" object while preserving all existing scripts
