@@ -1,2 +1,2 @@
 # Edit Plan
-1. prisma/schema.prisma — EDIT: Add `prompt`, `aspectRatio`, `style`, and `resolution` fields as optional strings to the existing Video model while preserving all existing fields, comments, and model relations.
+1. prisma/schema.prisma — EDIT: Change the "videoUrl" field on the Video model from required to optional by replacing `videoUrl String` with `videoUrl String?`
