@@ -1,163 +1,138 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Loader2, PlusCircle, FileText, BarChart } from 'lucide-react';
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Loader2, FileText, Download, Trash2, PlusCircle } from 'lucide-react'
+import { format } from 'date-fns'
 
-interface Document {
-  id: string;
-  title: string;
-  createdAt: string;
-  status: 'draft' | 'generated' | 'published';
+interface GeneratedDocument {
+  id: string
+  title: string
+  createdAt: string
+  content: string
 }
 
 export default function DashboardPage() {
-  const router = useRouter();
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState({
-    total: 0,
-    draft: 0,
-    generated: 0,
-    published: 0,
-  });
+  const router = useRouter()
+  const [documents, setDocuments] = useState<GeneratedDocument[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Simulate fetching documents
     const fetchDocuments = async () => {
-      setIsLoading(true);
-      // Mock data
-      const mockDocuments: Document[] = [
-        { id: '1', title: 'Quarterly Report Q1', createdAt: '2023-10-15', status: 'published' },
-        { id: '2', title: 'Project Proposal', createdAt: '2023-10-10', status: 'generated' },
-        { id: '3', title: 'Meeting Minutes', createdAt: '2023-10-05', status: 'draft' },
-        { id: '4', title: 'Client Contract', createdAt: '2023-09-28', status: 'published' },
-      ];
-      setTimeout(() => {
-        setDocuments(mockDocuments);
-        setStats({
-          total: mockDocuments.length,
-          draft: mockDocuments.filter(d => d.status === 'draft').length,
-          generated: mockDocuments.filter(d => d.status === 'generated').length,
-          published: mockDocuments.filter(d => d.status === 'published').length,
-        });
-        setIsLoading(false);
-      }, 1000);
-    };
-    fetchDocuments();
-  }, []);
+      try {
+        const response = await fetch('/api/documents')
+        const data = await response.json()
+        setDocuments(data)
+      } catch (error) {
+        console.error('Failed to fetch documents:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
 
-  const handleCreateNew = () => {
-    router.push('/generate');
-  };
+    fetchDocuments()
+  }, [])
 
-  const handleViewDocument = (id: string) => {
-    router.push(`/documents/${id}`);
-  };
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this document?')) return
+
+    try {
+      await fetch(`/api/documents/${id}`, {
+        method: 'DELETE',
+      })
+      setDocuments(documents.filter(doc => doc.id !== id))
+    } catch (error) {
+      console.error('Failed to delete document:', error)
+    }
+  }
+
+  const handleDownload = (document: GeneratedDocument) => {
+    const blob = new Blob([document.content], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${document.title}.txt`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <Button onClick={handleCreateNew} className="gap-2">
-          <PlusCircle size={20} />
-          Create New Document
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Manage your generated documents
+          </p>
+        </div>
+        <Button onClick={() => router.push('/generate')}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Generate New
         </Button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : documents.length === 0 ? (
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Documents</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">No documents yet</h3>
+            <p className="text-muted-foreground text-center mb-6">
+              Generate your first document to get started
+            </p>
+            <Button onClick={() => router.push('/generate')}>
+              Generate Document
+            </Button>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Drafts</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.draft}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Generated</CardTitle>
-            <BarChart className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.generated}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Published</CardTitle>
-            <BarChart className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.published}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Documents */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Documents</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center items-center h-40">
-              <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-          ) : documents.length === 0 ? (
-            <div className="text-center py-10">
-              <p className="text-muted-foreground">No documents yet. Create your first one!</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {documents.map((doc) => (
-                <div
-                  key={doc.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                >
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {documents.map(document => (
+            <Card key={document.id} className="overflow-hidden">
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-medium">{doc.title}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Created on {new Date(doc.createdAt).toLocaleDateString()} • Status:{' '}
-                      <span
-                        className={`font-medium ${
-                          doc.status === 'published'
-                            ? 'text-green-600'
-                            : doc.status === 'generated'
-                            ? 'text-blue-600'
-                            : 'text-yellow-600'
-                        }`}
-                      >
-                        {doc.status.charAt(0).toUpperCase() + doc.status.slice(1)}
-                      </span>
-                    </p>
+                    <CardTitle className="line-clamp-1">{document.title}</CardTitle>
+                    <CardDescription>
+                      {format(new Date(document.createdAt), 'MMM dd, yyyy')}
+                    </CardDescription>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleViewDocument(doc.id)}
-                  >
-                    View
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleDownload(document)}
+                      className="h-8 w-8"
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleDelete(document.id)}
+                      className="h-8 w-8 text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground line-clamp-3">
+                  {document.content}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
-  );
+  )
 }
