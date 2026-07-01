@@ -1,2 +1,2 @@
 # Edit Plan
-1. prisma/schema.prisma — EDIT: Add `credits Int @default(0)` field to User model after the `name` field
+1. prisma/schema.prisma — EDIT: Add new fields to Video, User, and Template models as specified while preserving all existing fields and relations
