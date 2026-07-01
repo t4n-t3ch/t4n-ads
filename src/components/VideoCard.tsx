@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Video, VideoStatus } from '@/types'
 import { formatDate, formatDuration, truncate } from '@/lib/utils'
-import { StatusBadge } from './StatusBadge'
 import { cn } from '@/lib/utils'
 
 interface VideoCardProps {
@@ -103,7 +102,20 @@ export function VideoCard({ video, onDelete, onDownload, onClick, className }: V
         {/* Status Overlay */}
         {video.status !== VideoStatus.COMPLETED && (
           <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-            <StatusBadge status={video.status} />
+            <div className="px-3 py-1.5 bg-gray-800/90 backdrop-blur-sm rounded-full border border-gray-700">
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${
+                  video.status === VideoStatus.PROCESSING ? 'bg-yellow-500 animate-pulse' :
+                  video.status === VideoStatus.FAILED ? 'bg-red-500' :
+                  'bg-blue-500'
+                }`} />
+                <span className="text-sm font-medium text-gray-200">
+                  {video.status === VideoStatus.PROCESSING ? 'Processing' :
+                   video.status === VideoStatus.FAILED ? 'Failed' :
+                   'Uploading'}
+                </span>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -112,75 +124,61 @@ export function VideoCard({ video, onDelete, onDownload, onClick, className }: V
       <div className="p-4">
         <div className="flex items-start justify-between gap-3 mb-2">
           <div className="flex-1 min-w-0">
-            <h3 
-              className="font-medium text-white truncate cursor-pointer hover:text-orange-400 transition-colors"
-              onClick={() => onClick?.(video)}
-            >
-              {truncate(video.title, 50)}
-            </h3>
-            <p className="text-sm text-gray-400 mt-1">
-              {formatDate(video.createdAt)}
-            </p>
+            <h3 className="font-medium text-white truncate">{video.title}</h3>
+            <p className="text-sm text-gray-400 mt-1">{truncate(video.description, 60)}</p>
           </div>
+        </div>
 
-          <div className="flex items-center gap-2">
-            {/* Download Button */}
+        <div className="flex items-center justify-between text-sm text-gray-500">
+          <span>{formatDate(video.createdAt)}</span>
+          <div className="flex items-center gap-3">
             {video.status === VideoStatus.COMPLETED && video.videoUrl && (
               <button
                 onClick={handleDownload}
-                className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-500/10 rounded-lg transition-all"
-                title="Download video"
+                className="text-orange-500 hover:text-orange-400 transition-colors font-medium"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
+                Download
               </button>
             )}
-
-            {/* Delete Button */}
             {onDelete && (
               <button
                 onClick={() => setShowDeleteConfirm(true)}
                 disabled={isDeleting}
-                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all disabled:opacity-50"
-                title="Delete video"
+                className="text-red-500 hover:text-red-400 transition-colors disabled:opacity-50"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
+                {isDeleting ? 'Deleting...' : 'Delete'}
               </button>
             )}
           </div>
         </div>
+      </div>
 
-        {/* Delete Confirmation Modal */}
-        {showDeleteConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-sm mx-4">
-              <h3 className="text-lg font-medium text-white mb-2">Delete Video</h3>
-              <p className="text-gray-400 mb-6">
-                Are you sure you want to delete "{truncate(video.title, 30)}"? This action cannot be undone.
-              </p>
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="px-4 py-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-                  disabled={isDeleting}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isDeleting ? 'Deleting...' : 'Delete'}
-                </button>
-              </div>
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-sm w-full">
+            <h3 className="text-lg font-medium text-white mb-2">Delete Video</h3>
+            <p className="text-gray-400 mb-6">
+              Are you sure you want to delete "{video.title}"? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 px-4 py-2 border border-gray-700 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-600/50 rounded-lg text-white font-medium transition-colors"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
