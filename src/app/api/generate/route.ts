@@ -51,13 +51,7 @@ export async function POST(request: NextRequest) {
     });
 
     // 5. Start generation asynchronously (don't await)
-    generateVideo({
-      videoId: video.id,
-      prompt,
-      aspectRatio,
-      duration,
-      style,
-    }).then(async (result) => {
+    generateVideo(prompt, aspectRatio, duration).then(async (result) => {
       if (result.success) {
         await prisma.video.update({
           where: { id: video.id },
