@@ -1,4 +1,4 @@
 # Edit Plan
-1. package.json — EDIT: add "stripe": "^14.0.0" to dependencies
-2. src/app/dashboard/page.tsx — EDIT: fix truncated file by adding missing closing tags and closing brace to complete the JSX structure
-3. src/app/generate/page.tsx — EDIT: fix truncated file by completing the button label and adding any missing closing tags and braces to make the JSX valid
+1. src/components/ui/card.tsx — NEW: Create minimal Card, CardHeader, CardTitle, CardDescription, CardContent components using plain divs with Tailwind classes
+2. src/components/ui/button.tsx — NEW: Create minimal Button component using plain button with Tailwind classes
+3. package.json — EDIT: Add missing dependencies (react-icons, lucide-react, date-fns, clsx, tailwind-merge, @supabase/supabase-js, @supabase/auth-helpers-nextjs) to the existing dependencies object
