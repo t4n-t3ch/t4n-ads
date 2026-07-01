@@ -1,2 +1,2 @@
 # Edit Plan
-1. tsconfig.json — EDIT: Add "prisma/seed.ts" to the exclude array
+1. prisma/schema.prisma — EDIT: Add VideoStatus enum after datasource block and add status field to Video model after duration field
