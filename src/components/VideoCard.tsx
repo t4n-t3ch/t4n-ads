@@ -88,154 +88,113 @@ export function VideoCard({ video, onDelete, onDownload, onClick, className }: V
           </div>
         )}
 
-        {/* Status overlay */}
-        <div className="absolute top-3 left-3">
-          <StatusBadge status={video.status} />
-        </div>
-
-        {/* Duration overlay */}
+        {/* Duration Badge */}
         {video.duration && (
-          <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/80 backdrop-blur-sm rounded-md">
-            <span className="text-xs font-medium text-white">
-              {formatDuration(video.duration)}
-            </span>
+          <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/80 rounded-md text-xs font-medium">
+            {formatDuration(video.duration)}
           </div>
         )}
 
-        {/* Aspect ratio badge */}
-        <div className="absolute top-3 right-3 px-2 py-1 bg-black/80 backdrop-blur-sm rounded-md">
-          <span className="text-xs font-medium text-gray-300">
-            {getAspectRatioLabel()}
-          </span>
+        {/* Aspect Ratio Indicator */}
+        <div className="absolute top-2 left-2 px-2 py-1 bg-black/80 rounded-md text-xs font-medium">
+          {getAspectRatioLabel()}
         </div>
 
-        {/* Hover overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
-          <div className="p-4 w-full">
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onClick?.(video)
-              }}
-              className="w-full py-2 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-colors duration-200"
-            >
-              View Details
-            </button>
+        {/* Status Overlay */}
+        {video.status !== VideoStatus.COMPLETED && (
+          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+            <StatusBadge status={video.status} />
           </div>
-        </div>
+        )}
       </div>
 
       {/* Content Area */}
       <div className="p-4">
-        <div className="flex justify-between items-start mb-2">
-          <h3 
-            className="font-semibold text-white cursor-pointer hover:text-orange-400 transition-colors line-clamp-1"
-            onClick={() => onClick?.(video)}
-            title={video.title}
-          >
-            {truncate(video.title, 40)}
-          </h3>
-          <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
-            {formatDate(video.createdAt)}
-          </span>
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <div className="flex-1 min-w-0">
+            <h3 
+              className="font-medium text-white truncate cursor-pointer hover:text-orange-400 transition-colors"
+              onClick={() => onClick?.(video)}
+            >
+              {truncate(video.title, -1)}
+            </h3>
+            <p className="text-sm text-gray-400 mt-1">
+              {formatDate(video.createdAt)}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Download Button */}
+            {video.status === VideoStatus.COMPLETED && video.videoUrl && (
+              <button
+                onClick={handleDownload}
+                className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-500/10 rounded-lg transition-all"
+                title="Download video"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+              </button>
+            )}
+
+            {/* Delete Button */}
+            {onDelete && (
+              <>
+                {showDeleteConfirm ? (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleDelete}
+                      disabled={isDeleting}
+                      className="px-3 py-1.5 text-xs bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      {isDeleting ? 'Deleting...' : 'Confirm'}
+                    </button>
+                    <button
+                      onClick={() => setShowDeleteConfirm(false)}
+                      className="px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                    title="Delete video"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         </div>
 
-        <p className="text-sm text-gray-400 mb-4 line-clamp-2 min-h-[2.5rem]">
-          {video.description || 'No description provided'}
-        </p>
+        {/* Description */}
+        {video.description && (
+          <p className="text-sm text-gray-400 line-clamp-2">
+            {truncate(video.description, 100)}
+          </p>
+        )}
 
         {/* Tags */}
         {video.tags && video.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-4">
-            {video.tags.slice(0, 3).map((tag, index) => (
+          <div className="flex flex-wrap gap-1 mt-3">
+            {video.tags.slice(0, -1).map((tag) => (
               <span
-                key={index}
-                className="px-2 py-1 text-xs bg-gray-800 text-gray-300 rounded-full"
+                key={tag}
+                className="px-2 py-1 text-xs bg-gray-800/50 text-gray-300 rounded-md"
               >
                 {tag}
               </span>
             ))}
-            {video.tags.length > 3 && (
-              <span className="px-2 py-1 text-xs bg-gray-800 text-gray-300 rounded-full">
-                +{video.tags.length - 3}
-              </span>
-            )}
           </div>
         )}
-
-        {/* Actions */}
-        <div className="flex items-center justify-between pt-3 border-t border-gray-800">
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={handleDownload}
-              disabled={video.status !== VideoStatus.COMPLETED || !video.videoUrl}
-              className={cn(
-                "p-2 rounded-lg transition-colors duration-200",
-                video.status === VideoStatus.COMPLETED && video.videoUrl
-                  ? "text-gray-400 hover:text-white hover:bg-gray-800"
-                  : "text-gray-600 cursor-not-allowed"
-              )}
-              title={video.status === VideoStatus.COMPLETED ? "Download video" : "Video not available for download"}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-            </button>
-
-            <button
-              onClick={() => onClick?.(video)}
-              className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors duration-200"
-              title="Preview video"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            </button>
-          </div>
-
-          <div className="relative">
-            {showDeleteConfirm ? (
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="px-3 py-1 text-xs text-gray-400 hover:text-white transition-colors"
-                  disabled={isDeleting}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  className="px-3 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200 flex items-center"
-                >
-                  {isDeleting ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-1 h-3 w-3 text-white" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                      Deleting...
-                    </>
-                  ) : (
-                    'Confirm'
-                  )}
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-800 rounded-lg transition-colors duration-200"
-                title="Delete video"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
-            )}
-          </div>
-        </div>
       </div>
     </div>
   )
 }
+
+export default VideoCard
