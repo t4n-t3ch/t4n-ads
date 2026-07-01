@@ -1,8 +1,5 @@
-"use client"
-
 import { getUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import AdCard from '@/components/AdCard'
 
@@ -14,21 +11,14 @@ const mockAds = [
   { id: '4', title: 'Coffee Table', price: 150, image: '/table.jpg' },
 ]
 
-export default function DashboardPage() {
-  const [user, setUser] = useState<any>(null)
-  const [ads, setAds] = useState<any[]>(mockAds)
-
-  useEffect(() => {
-    const userData = getUser()
-    if (!userData) {
-      redirect('/login')
-    }
-    setUser(userData)
-  }, [])
-
+export default async function DashboardPage() {
+  const user = await getUser()
+  
   if (!user) {
-    return <div>Loading...</div>
+    redirect('/login')
   }
+
+  const ads = mockAds
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
@@ -85,8 +75,8 @@ export default function DashboardPage() {
               <p className="text-2xl font-bold">{ads.length}</p>
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
-              <p className="text-gray-400">Total Views</p>
-              <p className="text-2xl font-bold">1,247</p>
+              <p className="text-gray-400">Total Value</p>
+              <p className="text-2xl font-bold">${ads.reduce((sum, ad) => sum + ad.price, 0)}</p>
             </div>
           </div>
         </div>
