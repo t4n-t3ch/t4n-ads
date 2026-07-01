@@ -7,6 +7,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum VideoStatus {
+  draft
+  processing
+  completed
+  failed
+}
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -29,6 +36,7 @@ model Video {
   captionStyle  String?   // Optional field as requested
   tags          String?   // Optional field as requested
   duration      Int?
+  status        VideoStatus @default(draft)
   userId        String
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   templateId    String?
