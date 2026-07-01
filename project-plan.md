@@ -1,2 +1,2 @@
 # Edit Plan
-1. src/components/CreditsBadge.tsx — EDIT: Change `loading` to `isLoading` in two places to match the useCredits hook's return value
+1. src/components/Footer.tsx — EDIT: Complete the truncated file by adding the missing closing tags and export statement as specified in the instructions
