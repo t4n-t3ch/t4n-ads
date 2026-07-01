@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { useState, useCallback, createContext, useContext } from 'react'
 import { cn } from "@/lib/utils"
 
 type SelectContextType = {
@@ -11,10 +10,10 @@ type SelectContextType = {
   setOpen: (open: boolean) => void
 }
 
-const SelectContext = createContext<SelectContextType | undefined>(undefined)
+const SelectContext = React.createContext<SelectContextType | undefined>(undefined)
 
 const useSelectContext = () => {
-  const context = useContext(SelectContext)
+  const context = React.useContext(SelectContext)
   if (!context) {
     throw new Error("Select components must be used within a Select")
   }
@@ -28,7 +27,7 @@ interface SelectProps {
 }
 
 const Select = ({ value, onValueChange, children }: SelectProps) => {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = React.useState(false)
 
   const contextValue = React.useMemo(
     () => ({
