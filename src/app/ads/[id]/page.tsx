@@ -1,0 +1,1 @@
+// src/app/ads/[id]/page.tsx
