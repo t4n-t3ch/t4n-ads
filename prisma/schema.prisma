@@ -29,6 +29,8 @@ model User {
   subscriptionId String?
   subscriptionTier String?
   subscriptionCurrentPeriodEnd DateTime?
+  creditTransactions CreditTransaction[]
+  transactions       Transaction[]
 
   @@map("users")
 }
@@ -78,4 +80,29 @@ model Template {
   isPublic      Boolean   @default(false)
 
   @@map("templates")
+}
+
+model CreditTransaction {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount        Int
+  description   String?
+  balanceAfter  Int
+  createdAt     DateTime  @default(now())
+
+  @@map("credit_transactions")
+}
+
+model Transaction {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          String
+  amount        Int
+  description   String?
+  metadata      Json?
+  createdAt     DateTime  @default(now())
+
+  @@map("transactions")
 }
