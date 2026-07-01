@@ -1,14 +1,9 @@
-import type { Metadata } from "next";
+"use client";
+
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ["latin"] });
-
-export const metadata: Metadata = {
-  title: "T4N Ads",
-  description: "AI-powered ad campaign management",
-};
 
 export default function RootLayout({
   children,
@@ -17,9 +12,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-background text-foreground`}>
+      <body className={inter.className}>
         {children}
-        <Toaster />
       </body>
     </html>
   );
