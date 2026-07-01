@@ -19,7 +19,7 @@ export default function CreditsBadge({
   className,
   compact = false
 }: CreditsBadgeProps) {
-  const { credits, loading, error, refetch } = useCredits()
+  const { credits, isLoading, error, refetch } = useCredits()
   const [isLow, setIsLow] = useState(false)
 
   useEffect(() => {
@@ -30,7 +30,7 @@ export default function CreditsBadge({
     }
   }, [credits])
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className={cn(
         "flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-800/50 animate-pulse",
@@ -109,25 +109,7 @@ export default function CreditsBadge({
         "group relative inline-flex items-center px-4 py-2 rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98]",
         isLow 
           ? "bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/15" 
-          : "bg-gray-800/50 border border-gray-700/50 hover:bg-gray-800/70",
-        className
-      )}
-      onClick={(e) => {
-        if (isLow) {
-          e.preventDefault()
-          // In a real app, you might want to show a modal or redirect to checkout
-          window.location.href = '/pricing?highlight=credits'
-        }
-      }}
-    >
-      {badgeContent}
-      
-      <div className="ml-3 flex items-center gap-1.5">
-        <Plus className="w-3.5 h-3.5 text-gray-400 group-hover:text-orange-400 transition-colors" />
-        <span className="text-sm text-gray-400 group-hover:text-orange-400 transition-colors">
-          Add
-        </span>
-      </div>
-    </Link>
-  )
-}
+     
+PROJECT PLAN:
+# Edit Plan
+1. src/components/CreditsBadge.tsx — EDIT: Change `loading` to `isLoading` in two places to match the useCredits hook's return value
