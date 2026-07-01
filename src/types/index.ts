@@ -144,3 +144,13 @@ export interface PaginatedResponse<T> {
   hasNext: boolean;
   hasPrev: boolean;
 }
+
+export interface Ad {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  image: string;
+  userId: string;
+  createdAt: Date;
+}
