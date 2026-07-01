@@ -1,2 +1,2 @@
 # Edit Plan
-1. src/types/index.ts — EDIT: Add "category?: string;" to the existing "Ad" interface
+1. tsconfig.json — EDIT: Change "target": "es5" to "target": "es2017" in compilerOptions
