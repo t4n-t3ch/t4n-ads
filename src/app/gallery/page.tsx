@@ -123,111 +123,135 @@ export default function GalleryPage() {
     <div className="min-h-screen bg-[#0f0f11] text-white p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <FiVideo className="text-orange-500" />
-              Video Gallery
-            </h1>
-            <p className="text-gray-400 mt-2">
-              {stats.total} total videos • {stats.completed} completed • {stats.processing} processing • {stats.failed} failed
-            </p>
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">Video Gallery</h1>
+          <p className="text-gray-400">Browse and manage your generated videos</p>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-[#1a1a1f] rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm">Total Videos</p>
+                <p className="text-2xl font-bold">{stats.total}</p>
+              </div>
+              <FiVideo className="text-orange-500 text-xl" />
+            </div>
           </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => refetch()}
-              className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center gap-2 transition"
-            >
-              <FiRefreshCw />
-              Refresh
-            </button>
-            <button
-              onClick={() => router.push('/generate')}
-              className="px-4 py-2 bg-orange-500 hover:bg-orange-600 rounded-lg transition"
-            >
-              Generate New Video
-            </button>
+          <div className="bg-[#1a1a1f] rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm">Completed</p>
+                <p className="text-2xl font-bold text-green-500">{stats.completed}</p>
+              </div>
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+            </div>
+          </div>
+          <div className="bg-[#1a1a1f] rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm">Processing</p>
+                <p className="text-2xl font-bold text-yellow-500">{stats.processing}</p>
+              </div>
+              <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+            </div>
+          </div>
+          <div className="bg-[#1a1a1f] rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm">Failed</p>
+                <p className="text-2xl font-bold text-red-500">{stats.failed}</p>
+              </div>
+              <div className="w-3 h-3 rounded-full bg-red-500"></div>
+            </div>
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          {/* Search */}
-          <div className="relative">
-            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search videos..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:border-orange-500"
-            />
-          </div>
+        {/* Controls */}
+        <div className="bg-[#1a1a1f] rounded-xl p-4 mb-8">
+          <div className="flex flex-col md:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1">
+              <div className="relative">
+                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                <input
+                  type="text"
+                  placeholder="Search videos by title or prompt..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-[#0f0f11] border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+            </div>
 
-          {/* Status Filter */}
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Status</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:border-orange-500"
-            >
-              <option value="all">All Status</option>
-              <option value="completed">Completed</option>
-              <option value="processing">Processing</option>
-              <option value="failed">Failed</option>
-            </select>
-          </div>
+            {/* Filters */}
+            <div className="flex flex-wrap gap-4">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-4 py-2 bg-[#0f0f11] border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              >
+                <option value="all">All Status</option>
+                <option value="completed">Completed</option>
+                <option value="processing">Processing</option>
+                <option value="failed">Failed</option>
+              </select>
 
-          {/* Aspect Ratio Filter */}
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Aspect Ratio</label>
-            <select
-              value={aspectRatioFilter}
-              onChange={(e) => setAspectRatioFilter(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:border-orange-500"
-            >
-              <option value="all">All Ratios</option>
-              <option value="16:9">16:9</option>
-              <option value="9:16">9:16</option>
-              <option value="1:1">1:1</option>
-            </select>
-          </div>
+              <select
+                value={aspectRatioFilter}
+                onChange={(e) => setAspectRatioFilter(e.target.value)}
+                className="px-4 py-2 bg-[#0f0f11] border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              >
+                <option value="all">All Aspect Ratios</option>
+                <option value="16:9">16:9</option>
+                <option value="9:16">9:16</option>
+                <option value="1:1">1:1</option>
+                <option value="4:5">4:5</option>
+              </select>
 
-          {/* Sort By */}
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Sort By</label>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="w-full px-4 py-2 bg-gray-900 border border-gray-800 rounded-lg focus:outline-none focus:border-orange-500"
-            >
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-              <option value="duration">Duration (Longest)</option>
-            </select>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="px-4 py-2 bg-[#0f0f11] border border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              >
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="duration">Longest Duration</option>
+              </select>
+
+              <button
+                onClick={() => refetch()}
+                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition flex items-center gap-2"
+              >
+                <FiRefreshCw />
+                Refresh
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Video Grid */}
+        {/* Videos Grid */}
         {filteredVideos.length === 0 ? (
           <div className="text-center py-16">
-            <FiVideo className="text-6xl text-gray-700 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-300 mb-2">No videos found</h3>
-            <p className="text-gray-500 mb-6">
+            <FiVideo className="text-gray-600 text-6xl mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2">No videos found</h3>
+            <p className="text-gray-400 mb-6">
               {searchQuery || statusFilter !== 'all' || aspectRatioFilter !== 'all'
-                ? 'Try adjusting your filters'
-                : 'Generate your first video to get started'}
+                ? 'Try adjusting your filters or search query'
+                : 'Start by generating your first video'}
             </p>
-            <button
-              onClick={() => router.push('/generate')}
-              className="px-6 py-3 bg-orange-500 hover:bg-orange-600 rounded-lg transition"
-            >
-              Generate Video
-            </button>
+            {!searchQuery && statusFilter === 'all' && aspectRatioFilter === 'all' && (
+              <button
+                onClick={() => router.push('/generate')}
+                className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
+              >
+                Generate Video
+              </button>
+            )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredVideos.map((video) => (
               <VideoCard
                 key={video.id}
@@ -239,21 +263,14 @@ export default function GalleryPage() {
             ))}
           </div>
         )}
-      </div>
 
-      {/* Video Modal */}
-      {selectedVideo && (
+        {/* Video Modal */}
         <VideoModal
           video={selectedVideo}
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          onDelete={() => {
-            handleDeleteVideo(selectedVideo.id)
-            setIsModalOpen(false)
-          }}
-          onDownload={() => handleDownload(selectedVideo)}
         />
-      )}
+      </div>
     </div>
   )
 }
