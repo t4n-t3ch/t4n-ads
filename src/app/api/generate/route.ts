@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/supabase';
 import prisma from '@/lib/prisma';
 import { generateVideo } from '@/services/videoGeneration';
+import { VideoStatus } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
         aspectRatio,
         duration,
         style,
-        status: 'PROCESSING',
+        status: VideoStatus.PROCESSING,
         progress: 0,
         templateId: templateId || null,
       },
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
         await prisma.video.update({
           where: { id: video.id },
           data: {
-            status: 'COMPLETED',
+            status: VideoStatus.COMPLETED,
             progress: 100,
             videoUrl: result.videoUrl,
             thumbnailUrl: result.thumbnailUrl,
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
         await prisma.video.update({
           where: { id: video.id },
           data: {
-            status: 'FAILED',
+            status: VideoStatus.FAILED,
             error: result.error,
           },
         });
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
       await prisma.video.update({
         where: { id: video.id },
         data: {
-          status: 'FAILED',
+          status: VideoStatus.FAILED,
           error: error.message,
         },
       });
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
       success: true,
       videoId: video.id,
       message: 'Video generation started',
-      status: 'PROCESSING',
+      status: VideoStatus.PROCESSING,
     });
 
   } catch (error) {
