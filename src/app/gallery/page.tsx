@@ -89,118 +89,127 @@ export default function GalleryPage() {
     const completed = videos.filter(v => v.status === 'completed').length
     const processing = videos.filter(v => v.status === 'processing').length
     const failed = videos.filter(v => v.status === 'failed').length
-    
     return { total, completed, processing, failed }
   }
 
   const stats = getStats()
 
-  if (authLoading) {
-    return null // Will be handled by loading.tsx
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen bg-[#0f0f11] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#0f0f11] flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-white mb-2">Error loading videos</h2>
+          <p className="text-gray-400 mb-4">{error}</p>
+          <button
+            onClick={() => refetch()}
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-[#0f0f11] text-white p-4 md:p-8">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-2">Video Gallery</h1>
-              <p className="text-gray-400">
-                Manage and view all your AI-generated video ads
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => refetch()}
-                disabled={loading}
-                className={cn(
-                  "px-4 py-2 rounded-lg flex items-center gap-2 transition-all",
-                  loading
-                    ? "bg-gray-800 text-gray-400 cursor-not-allowed"
-                    : "bg-gray-800 hover:bg-gray-700 text-white"
-                )}
-              >
-                <FiRefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
-                {loading ? 'Refreshing...' : 'Refresh'}
-              </button>
-              <button
-                onClick={() => router.push('/generate')}
-                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors"
-              >
-                Create New Video
-              </button>
-            </div>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">Video Gallery</h1>
+            <p className="text-gray-400 mt-1">Manage and view your generated videos</p>
           </div>
+          <button
+            onClick={() => refetch()}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            <FiRefreshCw className={loading ? 'animate-spin' : ''} />
+            Refresh
+          </button>
+        </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
-              <div className="text-2xl font-bold text-white">{stats.total}</div>
-              <div className="text-sm text-gray-400">Total Videos</div>
-            </div>
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
-              <div className="text-2xl font-bold text-green-500">{stats.completed}</div>
-              <div className="text-sm text-gray-400">Completed</div>
-            </div>
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
-              <div className="text-2xl font-bold text-orange-500">{stats.processing}</div>
-              <div className="text-sm text-gray-400">Processing</div>
-            </div>
-            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
-              <div className="text-2xl font-bold text-red-500">{stats.failed}</div>
-              <div className="text-sm text-gray-400">Failed</div>
-            </div>
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-gray-900 rounded-xl p-4">
+            <div className="text-2xl font-bold">{stats.total}</div>
+            <div className="text-gray-400 text-sm">Total Videos</div>
+          </div>
+          <div className="bg-gray-900 rounded-xl p-4">
+            <div className="text-2xl font-bold text-green-500">{stats.completed}</div>
+            <div className="text-gray-400 text-sm">Completed</div>
+          </div>
+          <div className="bg-gray-900 rounded-xl p-4">
+            <div className="text-2xl font-bold text-yellow-500">{stats.processing}</div>
+            <div className="text-gray-400 text-sm">Processing</div>
+          </div>
+          <div className="bg-gray-900 rounded-xl p-4">
+            <div className="text-2xl font-bold text-red-500">{stats.failed}</div>
+            <div className="text-gray-400 text-sm">Failed</div>
           </div>
         </div>
 
-        {/* Filters and Search */}
-        <div className="mb-8 space-y-4">
-          <div className="flex flex-col md:flex-row gap-4">
+        {/* Filters */}
+        <div className="bg-gray-900 rounded-xl p-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Search */}
-            <div className="flex-1">
-              <div className="relative">
-                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search videos by title or prompt..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                />
-              </div>
+            <div className="relative">
+              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search videos..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-gray-800 rounded-lg border border-gray-700 focus:border-orange-500 focus:outline-none"
+              />
             </div>
 
-            {/* Filters */}
-            <div className="flex flex-wrap gap-3">
+            {/* Status Filter */}
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Status</label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-700 focus:border-orange-500 focus:outline-none"
               >
                 <option value="all">All Status</option>
-                <option value="processing">Processing</option>
                 <option value="completed">Completed</option>
+                <option value="processing">Processing</option>
                 <option value="failed">Failed</option>
-                <option value="draft">Draft</option>
               </select>
+            </div>
 
+            {/* Aspect Ratio Filter */}
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Aspect Ratio</label>
               <select
                 value={aspectRatioFilter}
                 onChange={(e) => setAspectRatioFilter(e.target.value)}
-                className="px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-700 focus:border-orange-500 focus:outline-none"
               >
-                <option value="all">All Aspect Ratios</option>
-                <option value="16:9">16:9 (Landscape)</option>
-                <option value="9:16">9:16 (Portrait)</option>
-                <option value="1:1">1:1 (Square)</option>
+                <option value="all">All Ratios</option>
+                <option value="16:9">16:9</option>
+                <option value="9:16">9:16</option>
+                <option value="1:1">1:1</option>
+                <option value="4:5">4:5</option>
               </select>
+            </div>
 
+            {/* Sort By */}
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Sort By</label>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-700 focus:border-orange-500 focus:outline-none"
               >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
@@ -210,82 +219,36 @@ export default function GalleryPage() {
           </div>
         </div>
 
-        {/* Videos Grid */}
-        {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-          </div>
-        ) : error ? (
-          <div className="text-center py-20">
-            <div className="text-red-500 mb-4">Error loading videos: {error}</div>
-            <button
-              onClick={() => refetch()}
-              className="px-6 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
-            >
-              Try Again
-            </button>
-          </div>
-        ) : filteredVideos.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-800/50 mb-6">
-              <FiVideo className="w-10 h-10 text-gray-500" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">No videos found</h3>
-            <p className="text-gray-400 mb-6 max-w-md mx-auto">
-              {searchQuery || statusFilter !== 'all' || aspectRatioFilter !== 'all'
-                ? 'Try adjusting your filters or search query'
-                : 'Create your first AI video ad to get started'}
+        {/* Video Grid */}
+        {filteredVideos.length === 0 ? (
+          <div className="text-center py-16">
+            <FiVideo className="mx-auto text-6xl text-gray-700 mb-4" />
+            <h3 className="text-xl font-bold mb-2">No videos found</h3>
+            <p className="text-gray-400">
+              {videos.length === 0 ? 'Create your first video to get started!' : 'Try adjusting your filters'}
             </p>
-            <button
-              onClick={() => {
-                setSearchQuery('')
-                setStatusFilter('all')
-                setAspectRatioFilter('all')
-                router.push('/generate')
-              }}
-              className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors"
-            >
-              Create Your First Video
-            </button>
           </div>
         ) : (
-          <>
-            <div className="mb-4 text-sm text-gray-400">
-              Showing {filteredVideos.length} of {videos.length} videos
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredVideos.map((video) => (
-                <VideoCard
-                  key={video.id}
-                  video={video}
-                  onClick={() => handleVideoClick(video)}
-                  onDelete={() => handleDeleteVideo(video.id)}
-                  onDownload={() => handleDownload(video)}
-                  isDeleting={isDeleting === video.id}
-                />
-              ))}
-            </div>
-          </>
-        )}
-
-        {/* Video Modal */}
-        {selectedVideo && (
-          <VideoModal
-            video={selectedVideo}
-            isOpen={isModalOpen}
-            onClose={() => {
-              setIsModalOpen(false)
-              setSelectedVideo(null)
-            }}
-            onDelete={() => {
-              handleDeleteVideo(selectedVideo.id)
-              setIsModalOpen(false)
-              setSelectedVideo(null)
-            }}
-            onDownload={() => handleDownload(selectedVideo)}
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredVideos.map((video) => (
+              <VideoCard
+                key={video.id}
+                video={video}
+                onClick={() => handleVideoClick(video)}
+                onDelete={() => handleDeleteVideo(video.id)}
+                onDownload={() => handleDownload(video)}
+              />
+            ))}
+          </div>
         )}
       </div>
+
+      {/* Video Modal */}
+      <VideoModal
+        video={selectedVideo}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   )
 }
