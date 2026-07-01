@@ -1,2 +1,2 @@
 # Edit Plan
-1. prisma/schema.prisma — EDIT: Add new fields to Video, User, and Template models as specified while preserving all existing fields and relations
+1. prisma/schema.prisma — EDIT: Add CreditTransaction and Transaction models at the end of file, and add creditTransactions and transactions relation fields to existing User model
