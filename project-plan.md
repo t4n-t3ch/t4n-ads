@@ -1,2 +1,2 @@
 # Edit Plan
-1. src/components/CreateAd.tsx — EDIT: Change import from `useState` to `useState, useEffect`, remove `useUser` import, replace `useUser()` with `useState` + `useEffect` pattern using existing `supabase` client
+1. src/components/CreditsBadge.tsx — EDIT: Change `loading` to `isLoading` in two places to match the useCredits hook's return value
