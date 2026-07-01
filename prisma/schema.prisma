@@ -39,7 +39,7 @@ model Video {
   id            String    @id @default(cuid())
   title         String
   description   String?
-  videoUrl      String
+  videoUrl      String?
   thumbnailUrl  String?
   captionStyle  String?   // Optional field as requested
   tags          String?   // Optional field as requested
@@ -107,6 +107,3 @@ model Transaction {
   description   String?
   metadata      Json?
   createdAt     DateTime  @default(now())
-
-  @@map("transactions")
-}
