@@ -153,4 +153,5 @@ export interface Ad {
   image: string;
   userId: string;
   createdAt: Date;
+  category?: string;
 }
