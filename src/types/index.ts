@@ -52,6 +52,8 @@ export interface Template {
   creditsRequired: number;
   createdAt: Date;
   updatedAt: Date;
+  views?: number;
+  uses?: number;
 }
 
 export interface GenerateRequest {
