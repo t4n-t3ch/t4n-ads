@@ -24,6 +24,11 @@ model User {
   updatedAt     DateTime  @updatedAt
   videos        Video[]
   templates     Template[]
+  supabaseId    String?   @unique
+  subscriptionStatus String?
+  subscriptionId String?
+  subscriptionTier String?
+  subscriptionCurrentPeriodEnd DateTime?
 
   @@map("users")
 }
@@ -44,6 +49,10 @@ model Video {
   template      Template? @relation(fields: [templateId], references: [id], onDelete: SetNull)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  creditCost    Int       @default(0)
+  progress      Int       @default(0)
+  metadata      Json?
+  error         String?
 
   @@map("videos")
 }
@@ -61,6 +70,12 @@ model Template {
   videos        Video[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  category      String?
+  duration      Int?
+  aspectRatio   String?
+  previewUrl    String?
+  examplePrompt String?
+  isPublic      Boolean   @default(false)
 
   @@map("templates")
 }
