@@ -1,7 +1,6 @@
 "use client"
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import { useUser } from '@supabase/auth-helpers-nextjs'
 import { FiUpload } from 'react-icons/fi'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -15,7 +14,10 @@ export default function CreateAd() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [loading, setLoading] = useState(false)
-  const user = useUser()
+  const [user, setUser] = useState<any>(null)
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUser(data.user))
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
