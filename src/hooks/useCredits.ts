@@ -10,7 +10,7 @@ interface CreditsResponse {
 }
 
 export function useCredits() {
-  const { user, isLoading: authLoading } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [credits, setCredits] = useState<number>(0)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
@@ -126,21 +126,12 @@ export function useCredits() {
     }
   }, [authLoading, fetchCredits])
 
-  const refetch = useCallback(() => {
-    fetchCredits()
-  }, [fetchCredits])
-
-  const hasLowCredits = credits < 10
-  const hasNoCredits = credits === 0
-
   return {
     credits,
-    isLoading: isLoading || authLoading,
+    isLoading,
     error,
-    refetch,
+    fetchCredits,
     deductCredits,
     addCredits,
-    hasLowCredits,
-    hasNoCredits,
   }
 }
