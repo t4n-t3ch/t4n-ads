@@ -1,2 +1,2 @@
 # Edit Plan
-1. src/components/Footer.tsx — EDIT: Fix broken JSX structure in social links section and complete the language selector dropdown
+1. src/components/Footer.tsx — EDIT: Fix the truncated Discord icon SVG path by replacing the broken text with the complete SVG path and closing tags as specified
