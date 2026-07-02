@@ -1,3 +1,3 @@
 # Edit Plan
 
-1. src/lib/utils.ts — EDIT: update `truncate` function signature to accept `text: string | undefined | null`, add a guard clause `if (!text) return ''` before the existing length check, and keep the rest of the function (`if (text.length <= maxLength) return text` and `return text.slice(0, maxLength) + '...'`) unchanged. No other functions in the file (`cn`, `formatDate`, `formatDuration`) or imports should be modified.
+1. src/types/index.ts — EDIT: In the `Video` interface, add a new optional field `resolution?: string;` immediately after the line `metadata?: Record<string, any>;` and before the line `createdAt: Date;`. No other fields, interfaces, or lines in the file should be modified, reordered, or removed.
