@@ -61,154 +61,113 @@ const Footer = () => {
         href: 'https://linkedin.com/company/t4n-ads',
         icon: (
           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-            <path fillRule="evenodd" d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" clipRule="evenodd" />
+            <path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515a.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0a12.64 12.64 0 00-.617-1.25a.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057a19.9 19.9 0 005.993 3.03a.078.078 0 00.084-.028c.462-.63.872-1.295 1.226-1.994a.076.076 0 00-.041-.106a13.107 13.107 0 01-1.872-.892a.077.077 0 01-.008-.128c.125-.094.25-.188.372-.284a.076.076 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.076.076 0 01.078.01c.12.096.245.19.372.284a.077.077 0 01-.006.127a12.3 12.3 0 01-1.873.892a.077.077 0 00-.041.107c.355.698.765 1.363 1.226 1.993a.076.076 0 00.084.028a19.839 19.839 0 006.002-3.03a.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z" />
           </svg>
         ),
-      },
-      {
-        name: 'Discord',
-        href: 'https://discord.gg/t4n-ads',
-        icon: (
-          <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515a.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0a12.64 12.64 0 00-.617-1.25a.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057a19.9 19.9 0 005.993 3.03a.078.078 0 00.084-.028c.462-.63.872-1.295 1.226-1.994a.076.076 0 00-.
       },
     ],
   }
 
   return (
-    <footer className="bg-gray-900 border-t border-gray-800">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="py-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
-            {/* Brand section */}
-            <div className="lg:col-span-2">
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">T4N</span>
-                </div>
-                <span className="text-xl font-bold text-white">T4N Ads</span>
-              </div>
-              <p className="text-gray-400 text-sm max-w-md mb-6">
-                Create stunning AI-powered video ads in seconds. No design skills needed. 
-                Transform your ideas into engaging video content with our advanced AI technology.
-              </p>
-              
-              {/* Newsletter subscription */}
-              <div className="mt-6">
-                <h3 className="text-sm font-semibold text-white mb-3">Stay in the loop</h3>
-                <form onSubmit={handleSubscribe} className="flex gap-2">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    className="flex-1 min-w-0 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
-                    required
-                  />
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 text-sm"
-                  >
-                    Subscribe
-                  </button>
-                </form>
-                <p className="text-gray-500 text-xs mt-2">
-                  Join our newsletter for product updates and AI video tips.
-                </p>
-              </div>
-            </div>
-
-            {/* Product links */}
-            <div>
-              <h3 className="text-sm font-semibold text-white mb-4">Product</h3>
-              <ul className="space-y-3">
-                {navigation.product.map((item) => (
-                  <li key={item.name}>
-                    <Link
-                      href={item.href}
-                      className="text-gray-400 hover:text-orange-500 transition-colors text-sm"
-                    >
-                      {item.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Company links */}
-            <div>
-              <h3 className="text-sm font-semibold text-white mb-4">Company</h3>
-              <ul className="space-y-3">
-                {navigation.company.map((item) => (
-                  <li key={item.name}>
-                    <Link
-                      href={item.href}
-                      className="text-gray-400 hover:text-orange-500 transition-colors text-sm"
-                    >
-                      {item.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Legal links */}
-            <div>
-              <h3 className="text-sm font-semibold text-white mb-4">Legal</h3>
-              <ul className="space-y-3">
-                {navigation.legal.map((item) => (
-                  <li key={item.name}>
-                    <Link
-                      href={item.href}
-                      className="text-gray-400 hover:text-orange-500 transition-colors text-sm"
-                    >
-                      {item.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+    <footer className="bg-gray-900 text-gray-300">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          {/* Newsletter */}
+          <div className="lg:col-span-1">
+            <h3 className="text-lg font-semibold text-white">Stay in the loop</h3>
+            <p className="mt-2 text-sm">
+              Subscribe to get updates on new features, templates, and best practices.
+            </p>
+            <form onSubmit={handleSubscribe} className="mt-4 flex">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                className="flex-1 rounded-l-md border border-gray-700 bg-gray-800 px-4 py-2 text-white placeholder-gray-400 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+                required
+              />
+              <button
+                type="submit"
+                className="rounded-r-md bg-orange-500 px-4 py-2 font-medium text-white hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+              >
+                Subscribe
+              </button>
+            </form>
           </div>
 
-          {/* Bottom section */}
-          <div className="mt-12 pt-8 border-t border-gray-800">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <div className="text-gray-500 text-sm">
-                © {new Date().getFullYear()} T4N Ads. All rights reserved.
-              </div>
-              
-              <div className="flex items-center space-x-6">
-                {/* Social links */}
-                <div className="flex items-center space-x-4">
-                  {navigation.social.map((item) => (
-                    <a
-                      key={item.name}
-                      href={item.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gray-400 hover:text-orange-500 transition-colors"
-                      aria-label={item.name}
-                    >
-                      {item.icon}
-                    </a>
+          {/* Navigation Links */}
+          <div className="lg:col-span-2">
+            <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+              <div>
+                <h3 className="text-lg font-semibold text-white">Product</h3>
+                <ul className="mt-4 space-y-2">
+                  {navigation.product.map((item) => (
+                    <li key={item.name}>
+                      <Link
+                        href={item.href}
+                        className="text-sm hover:text-orange-500 hover:underline"
+                      >
+                        {item.name}
+                      </Link>
+                    </li>
                   ))}
-                </div>
-
-                {/* Language selector */}
-                <div className="relative">
-                  <select
-                    className="appearance-none bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    defaultValue="en"
-                  >
-                    <option value="en">English</option>
-                    <option value="es">Español</option>
-                    <option value="fr">Français</option>
-                    <option value="de">Deutsch</option>
-                    <option value="ja">日本語</option>
-                  </select>
-                </div>
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-white">Company</h3>
+                <ul className="mt-4 space-y-2">
+                  {navigation.company.map((item) => (
+                    <li key={item.name}>
+                      <Link
+                        href={item.href}
+                        className="text-sm hover:text-orange-500 hover:underline"
+                      >
+                        {item.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-white">Legal</h3>
+                <ul className="mt-4 space-y-2">
+                  {navigation.legal.map((item) => (
+                    <li key={item.name}>
+                      <Link
+                        href={item.href}
+                        className="text-sm hover:text-orange-500 hover:underline"
+                      >
+                        {item.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Social Links & Copyright */}
+        <div className="mt-12 border-t border-gray-800 pt-8">
+          <div className="flex flex-col items-center justify-between sm:flex-row">
+            <div className="flex space-x-6">
+              {navigation.social.map((item) => (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  className="text-gray-400 hover:text-orange-500"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span className="sr-only">{item.name}</span>
+                  {item.icon}
+                </a>
+              ))}
+            </div>
+            <p className="mt-4 text-sm sm:mt-0">
+              &copy; {new Date().getFullYear()} T4N Ads. All rights reserved.
+            </p>
           </div>
         </div>
       </div>
