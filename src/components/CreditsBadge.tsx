@@ -19,7 +19,7 @@ export default function CreditsBadge({
   className,
   compact = false
 }: CreditsBadgeProps) {
-  const { credits, isLoading, error, refetch } = useCredits()
+  const { credits, isLoading, error, fetchCredits: refetch } = useCredits()
   const [isLow, setIsLow] = useState(false)
 
   useEffect(() => {
