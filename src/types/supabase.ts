@@ -47,12 +47,10 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
-      }
-      [key: string]: {
-        Row: Record<string, any>
-        Insert: Record<string, any>
-        Update: Record<string, any>
+        Relationships: []
       }
     }
+    Views: Record<string, never>
+    Functions: Record<string, never>
   }
 }
