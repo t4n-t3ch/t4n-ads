@@ -20,7 +20,8 @@ export function formatDuration(seconds: number): string {
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
 }
 
-export function truncate(text: string, maxLength: number): string {
+export function truncate(text: string | undefined | null, maxLength: number): string {
+  if (!text) return ''
   if (text.length <= maxLength) return text
   return text.slice(0, maxLength) + '...'
 }
