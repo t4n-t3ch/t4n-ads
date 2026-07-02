@@ -1,3 +1,3 @@
 # Edit Plan
 
-1. src/types/index.ts — EDIT: In the `Video` interface, add a new optional field `resolution?: string;` immediately after the line `metadata?: Record<string, any>;` and before the line `createdAt: Date;`. No other fields, interfaces, or lines in the file should be modified, reordered, or removed.
+1. src/hooks/useCredits.ts — EDIT: Locate the line `const { user, isLoading: authLoading } = useAuth()` inside the `useCredits` function and replace it with `const { user, loading: authLoading } = useAuth()`. This corrects the destructured property name from `isLoading` to `loading` to match the actual property returned by the `useAuth` hook, while keeping the local alias `authLoading` unchanged so no other code in the file referencing `authLoading` needs modification. No other lines, imports, logic, or formatting in the file should be altered.
