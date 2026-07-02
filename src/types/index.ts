@@ -31,6 +31,7 @@ export interface Video {
   jobId?: string;
   errorMessage?: string;
   metadata?: Record<string, any>;
+  resolution?: string;
   createdAt: Date;
   updatedAt: Date;
   completedAt?: Date;
