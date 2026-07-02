@@ -122,7 +122,7 @@ const Footer = () => {
               </div>
               <div className="flex items-center space-x-4">
                 {navigation.social.map((item) => (
-                  <a
+                  <Link
                     key={item.name}
                     href={item.href}
                     target="_blank"
@@ -131,7 +131,7 @@ const Footer = () => {
                     aria-label={item.name}
                   >
                     {item.label}
-                  </a>
+                  </Link>
                 ))}
               </div>
             </div>
