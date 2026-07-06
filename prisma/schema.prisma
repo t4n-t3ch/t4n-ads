@@ -59,6 +59,7 @@ model Video {
   aspectRatio   String?
   style         String?
   resolution    String?
+  jobId         String?   @unique
 
   @@map("videos")
 }
