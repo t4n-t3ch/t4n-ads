@@ -3,11 +3,12 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
 
 export default function LoginPage() {
   const router = useRouter()
+  const { signInWithEmail, signUpWithEmail, signInWithGoogle, resetPassword } = useAuth()
   const [isLogin, setIsLogin] = useState(true)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -49,27 +50,15 @@ export default function LoginPage() {
     try {
       if (isLogin) {
         // Sign in
-        const { error } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password
-        })
+        await signInWithEmail(formData.email, formData.password)
 
-        if (error) throw error
-        
         setSuccess('Login successful! Redirecting...')
-        router.push('/generate')
+        router.push('/dashboard')
+        router.refresh()
       } else {
         // Sign up
-        const { error } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/api/auth/callback`
-          }
-        })
+        await signUpWithEmail(formData.email, formData.password)
 
-        if (error) throw error
-        
         setSuccess('Account created! Please check your email to confirm your account.')
         setFormData({ email: '', password: '', confirmPassword: '' })
       }
@@ -83,16 +72,9 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setLoading(true)
     setError(null)
-    
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/api/auth/callback`
-        }
-      })
 
-      if (error) throw error
+    try {
+      await signInWithGoogle()
     } catch (err: any) {
       setError(err.message || 'Failed to sign in with Google')
       setLoading(false)
@@ -109,12 +91,8 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
-        redirectTo: `${window.location.origin}/reset-password`
-      })
+      await resetPassword(formData.email)
 
-      if (error) throw error
-      
       setSuccess('Password reset email sent! Check your inbox.')
     } catch (err: any) {
       setError(err.message || 'Failed to send reset email')
