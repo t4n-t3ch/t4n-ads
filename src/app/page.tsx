@@ -9,9 +9,14 @@ export default function HomePage() {
 
   useEffect(() => {
     async function loadAds() {
-      const data = await fetchAds();
-      setAds(data);
-      setLoading(false);
+      try {
+        const data = await fetchAds();
+        setAds(data);
+      } catch (error) {
+        console.error('Failed to load ads:', error);
+      } finally {
+        setLoading(false);
+      }
     }
     loadAds();
   }, []);
