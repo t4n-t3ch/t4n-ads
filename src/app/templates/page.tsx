@@ -36,10 +36,10 @@ export default function TemplatesPage() {
         throw new Error(`Failed to fetch templates: ${response.status}`)
       }
       
-      const data = await response.json()
+      const { data } = await response.json()
       setTemplates(data)
       setFilteredTemplates(data)
-      
+
       // Extract unique categories
       const uniqueCategories = ['all', ...new Set(data.map((t: Template) => t.category))]
       setCategories(uniqueCategories as string[])

@@ -27,10 +27,15 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    const data = templates.map((template) => ({
+      ...template,
+      tags: template.tags ? template.tags.split(',') : [],
+    }));
+
     return NextResponse.json({
       success: true,
-      data: templates,
-      count: templates.length,
+      data,
+      count: data.length,
     });
   } catch (error) {
     console.error('Error fetching templates:', error);

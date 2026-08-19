@@ -5,6 +5,18 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding database...');
 
+  // Ensure a demo user exists to own the seeded templates
+  const demoUser = await prisma.user.upsert({
+    where: { email: 't4nt3ch@gmail.com' },
+    update: {},
+    create: {
+      email: 't4nt3ch@gmail.com',
+      name: 'Demo User',
+      credits: 100,
+    },
+  });
+  console.log(`👤 Demo user ready: ${demoUser.email} (${demoUser.credits} credits)`);
+
   // Clear existing templates
   await prisma.template.deleteMany();
   console.log('🗑️  Cleared existing templates');
@@ -143,8 +155,14 @@ async function main() {
 
   // Insert templates
   for (const template of templates) {
+    const { tags, promptTemplate, creditsRequired, ...rest } = template;
     await prisma.template.create({
-      data: template,
+      data: {
+        ...rest,
+        tags: tags.join(','),
+        userId: demoUser.id,
+        config: { promptTemplate, creditsRequired },
+      },
     });
     console.log(`✅ Created template: ${template.name}`);
   }
