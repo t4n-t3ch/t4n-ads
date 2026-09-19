@@ -33,20 +33,21 @@ export async function POST(request: NextRequest) {
 
     // Ensure a matching User row exists before creating a Video that
     // references it via foreign key — a brand new user may not have one yet
-    // if this is their first action after signing up.
-    await prisma.user.upsert({
-      where: { id: session.user.id },
+    // if this is their first action after signing up. Keyed by email to
+    // match how /api/gallery and /api/templates look up the same user.
+    const user = await prisma.user.upsert({
+      where: { email: session.user.email || '' },
       update: {},
       create: {
-        id: session.user.id,
         email: session.user.email || '',
+        supabaseId: session.user.id,
         credits: 10,
       },
     });
 
     const video = await prisma.video.create({
       data: {
-        userId: session.user.id,
+        userId: user.id,
         title: prompt.substring(0, 50) + (prompt.length > 50 ? '...' : ''),
         prompt,
         aspectRatio,
