@@ -1,6 +1,7 @@
 import { getUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import AppHeader from '@/components/AppHeader'
 
 // Mock data - in a real app this would come from an API
 const mockAds = [
@@ -20,7 +21,9 @@ export default async function DashboardPage() {
   const ads = mockAds
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
+    <>
+      <AppHeader />
+      <div className="min-h-screen bg-gray-900 text-white p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -28,10 +31,10 @@ export default async function DashboardPage() {
             <p className="text-gray-400">Welcome back, {user.email}!</p>
           </div>
           <Link
-            href="/ads/create"
+            href="/studios"
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
           >
-            + Create New Ad
+            + New Studio
           </Link>
         </div>
 
@@ -41,10 +44,10 @@ export default async function DashboardPage() {
             <div className="bg-gray-800 rounded-xl p-8 text-center">
               <p className="text-gray-400 mb-4">You haven't created any ads yet.</p>
               <Link
-                href="/ads/create"
+                href="/studios"
                 className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium"
               >
-                Create Your First Ad
+                Create Your First Studio
               </Link>
             </div>
           ) : (
@@ -80,6 +83,7 @@ export default async function DashboardPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 }

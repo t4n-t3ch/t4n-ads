@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { Video } from '@/types'
 import { useAuth } from '@/hooks/useAuth'
 import { useVideos } from '@/hooks/useVideos'
+import AppHeader from '@/components/AppHeader'
 import VideoCard from '@/components/VideoCard'
 import VideoModal from '@/components/VideoModal'
 import { FiVideo, FiFilter, FiSearch, FiTrash2, FiRefreshCw } from 'react-icons/fi'
@@ -120,7 +121,9 @@ export default function GalleryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f11] text-white p-4 md:p-8">
+    <>
+      <AppHeader />
+      <div className="min-h-screen bg-[#0f0f11] text-white p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -271,6 +274,7 @@ export default function GalleryPage() {
           onClose={() => setIsModalOpen(false)}
         />
       </div>
-    </div>
+      </div>
+    </>
   )
 }

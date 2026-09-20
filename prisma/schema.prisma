@@ -31,6 +31,7 @@ model User {
   subscriptionCurrentPeriodEnd DateTime?
   creditTransactions CreditTransaction[]
   transactions       Transaction[]
+  studios            Studio[]
 
   @@map("users")
 }
@@ -60,8 +61,42 @@ model Video {
   style         String?
   resolution    String?
   jobId         String?   @unique
+  studioId      String?
+  studio        Studio?   @relation(fields: [studioId], references: [id], onDelete: SetNull)
 
   @@map("videos")
+}
+
+model Studio {
+  id                String        @id @default(cuid())
+  userId            String
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name              String
+  type              String        // e.g. "trading", "ufc", or a freeform label
+  description       String?
+  stylePrompt       String?       // reusable style/voice guidance applied to every generation in this studio
+  aspectRatio       String        @default("9:16")
+  dailyGeneration   Boolean       @default(false)
+  dailyPrompt       String?       // prompt template used for automatic daily generation
+  lastGeneratedAt   DateTime?
+  assets            StudioAsset[]
+  videos            Video[]
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@map("studios")
+}
+
+model StudioAsset {
+  id        String   @id @default(cuid())
+  studioId  String
+  studio    Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  type      String   // "image" | "link"
+  url       String
+  caption   String?
+  createdAt DateTime @default(now())
+
+  @@map("studio_assets")
 }
 
 model Template {

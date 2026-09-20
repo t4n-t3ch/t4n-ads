@@ -5,6 +5,8 @@ type SubmitParams = {
   prompt: string
   aspectRatio: string
   duration: number
+  /** A publicly-fetchable image URL to anchor the video's opening frame (e.g. a trading screenshot or fighter photo). */
+  referenceImageUrl?: string
 }
 
 type SubmitResult =
@@ -12,7 +14,7 @@ type SubmitResult =
   | { success: false; error: string }
 
 export async function submitVideoGeneration(
-  { prompt, aspectRatio, duration }: SubmitParams,
+  { prompt, aspectRatio, duration, referenceImageUrl }: SubmitParams,
   callbackUrl: string
 ): Promise<SubmitResult> {
   const apiKey = process.env.OPENROUTER_API_KEY
@@ -35,6 +37,15 @@ export async function submitVideoGeneration(
         aspect_ratio: aspectRatio,
         generate_audio: false,
         callback_url: callbackUrl,
+        ...(referenceImageUrl && {
+          frame_images: [
+            {
+              type: 'image_url',
+              image_url: { url: referenceImageUrl },
+              frame_type: 'first_frame',
+            },
+          ],
+        }),
       }),
     })
 

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Template } from '@/types'
 import { useAuth } from '@/hooks/useAuth'
+import AppHeader from '@/components/AppHeader'
 
 export default function TemplatesPage() {
   const router = useRouter()
@@ -141,7 +142,9 @@ export default function TemplatesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black pt-24 pb-16 px-4">
+    <>
+      <AppHeader />
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black pt-24 pb-16 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -308,6 +311,7 @@ export default function TemplatesPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 }
