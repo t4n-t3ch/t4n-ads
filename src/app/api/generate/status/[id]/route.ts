@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { prisma } from '@/lib/prisma'
 import { getVideoGenerationStatus } from '@/services/videoGeneration'
+import { finalizeVideoGeneration } from '@/services/finalizeVideo'
 import { VideoStatus } from '@/types'
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
@@ -25,9 +26,14 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       id: video.id,
       status: video.status,
       progress: video.progress,
-      videoUrl: video.status === VideoStatus.COMPLETED ? `/api/videos/${video.id}/content` : undefined,
+      videoUrl: video.status === VideoStatus.COMPLETED ? video.videoUrl : undefined,
       error: video.error ?? undefined,
     })
+  }
+
+  // Veo finished and we're now adding voice/music/captions - nothing to poll externally for this part
+  if (video.status === VideoStatus.COMPOSING) {
+    return NextResponse.json({ id: video.id, status: 'composing', progress: video.progress })
   }
 
   if (!video.jobId) {
@@ -37,15 +43,15 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   const jobStatus = await getVideoGenerationStatus(video.jobId)
 
   if (jobStatus.status === 'completed' && jobStatus.videoUrl) {
-    await prisma.video.update({
-      where: { id: video.id },
-      data: { status: VideoStatus.COMPLETED, progress: 100, videoUrl: jobStatus.videoUrl },
-    })
+    // Awaited inline: local dev has no reachable webhook callback, so this poll is the only trigger.
+    await finalizeVideoGeneration(video.id, jobStatus.videoUrl)
+    const updated = await prisma.video.findUnique({ where: { id: video.id } })
     return NextResponse.json({
       id: video.id,
-      status: 'completed',
-      progress: 100,
-      videoUrl: `/api/videos/${video.id}/content`,
+      status: updated?.status ?? 'failed',
+      progress: updated?.progress ?? 0,
+      videoUrl: updated?.status === VideoStatus.COMPLETED ? updated.videoUrl : undefined,
+      error: updated?.error ?? undefined,
     })
   }
 

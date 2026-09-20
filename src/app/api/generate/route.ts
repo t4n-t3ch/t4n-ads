@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { prisma } from '@/lib/prisma';
 import { submitVideoGeneration } from '@/services/videoGeneration';
+import { pickDurationForNarration } from '@/services/captions';
 import { VideoStatus } from '@/types';
 import type { Database } from '@/types/supabase';
 
@@ -18,6 +19,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       prompt,
+      narration,
       aspectRatio = '16:9',
       duration = 8,
       style = 'cinematic',
@@ -30,6 +32,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const narrationScript = narration?.trim() || prompt;
+    const resolvedDuration = pickDurationForNarration(duration, narrationScript);
 
     // Ensure a matching User row exists before creating a Video that
     // references it via foreign key — a brand new user may not have one yet
@@ -50,8 +55,9 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         title: prompt.substring(0, 50) + (prompt.length > 50 ? '...' : ''),
         prompt,
+        narration: narrationScript,
         aspectRatio,
-        duration,
+        duration: resolvedDuration,
         style,
         status: VideoStatus.PROCESSING,
         progress: 0,
@@ -62,7 +68,7 @@ export async function POST(request: NextRequest) {
     const callbackUrl = `${request.nextUrl.origin}/api/webhooks/openrouter-video`;
 
     const result = await submitVideoGeneration(
-      { prompt, aspectRatio, duration },
+      { prompt, aspectRatio, duration: resolvedDuration },
       callbackUrl
     );
 

@@ -10,6 +10,7 @@ datasource db {
 enum VideoStatus {
   draft
   processing
+  composing
   completed
   failed
 }
@@ -57,6 +58,7 @@ model Video {
   metadata      Json?
   error         String?
   prompt        String?
+  narration     String?   // voiceover script; falls back to `prompt` if not set
   aspectRatio   String?
   style         String?
   resolution    String?

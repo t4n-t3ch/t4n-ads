@@ -18,6 +18,7 @@ type VideoStatusResponse = {
 
 export default function GeneratePage() {
   const [prompt, setPrompt] = useState('')
+  const [narration, setNarration] = useState('')
   const [aspectRatio, setAspectRatio] = useState('16:9')
   const [duration, setDuration] = useState('8')
   const [loading, setLoading] = useState(false)
@@ -58,7 +59,7 @@ export default function GeneratePage() {
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, aspectRatio, duration: Number(duration) }),
+        body: JSON.stringify({ prompt, narration, aspectRatio, duration: Number(duration) }),
       })
       const data = await res.json()
 
@@ -101,6 +102,20 @@ export default function GeneratePage() {
                   minLength={3}
                   rows={4}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="narration">Voiceover script (optional)</Label>
+                <Textarea
+                  id="narration"
+                  placeholder="What the narrator should say. Leave blank to use the description above."
+                  value={narration}
+                  onChange={(e) => setNarration(e.target.value)}
+                  rows={2}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Every video gets a voiceover, background music, and burned-in captions automatically.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -148,6 +163,15 @@ export default function GeneratePage() {
                 <div className="animate-spin h-8 w-8 border-2 border-orange-500 border-t-transparent rounded-full mx-auto mb-3" />
                 <p className="text-sm text-muted-foreground">
                   Generating your video with Veo 3.1... this can take a minute or two.
+                </p>
+              </div>
+            )}
+
+            {status && status.status === 'composing' && (
+              <div className="mt-6 text-center">
+                <div className="animate-spin h-8 w-8 border-2 border-orange-500 border-t-transparent rounded-full mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground">
+                  Adding voiceover, music, and captions...
                 </p>
               </div>
             )}

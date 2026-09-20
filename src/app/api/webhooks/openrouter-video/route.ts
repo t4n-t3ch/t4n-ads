@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { VideoStatus } from '@/types'
+import { finalizeVideoGeneration } from '@/services/finalizeVideo'
 
 export async function POST(request: NextRequest) {
   const event = await request.json()
@@ -16,14 +17,10 @@ export async function POST(request: NextRequest) {
   }
 
   if (event.type === 'video.generation.completed') {
-    await prisma.video.update({
-      where: { id: video.id },
-      data: {
-        status: VideoStatus.COMPLETED,
-        progress: 100,
-        videoUrl: event.data.unsigned_urls?.[0],
-      },
-    })
+    const rawVideoUrl = event.data.unsigned_urls?.[0]
+    if (rawVideoUrl) {
+      await finalizeVideoGeneration(video.id, rawVideoUrl)
+    }
   } else if (event.type === 'video.generation.failed') {
     await prisma.video.update({
       where: { id: video.id },

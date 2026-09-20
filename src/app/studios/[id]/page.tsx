@@ -58,6 +58,7 @@ export default function StudioDetailPage() {
 
   // Generate-specific-video state
   const [prompt, setPrompt] = useState('')
+  const [narration, setNarration] = useState('')
   const [selectedAssetId, setSelectedAssetId] = useState<string>('none')
   const [generating, setGenerating] = useState(false)
   const [genStatus, setGenStatus] = useState<{ status: string; videoUrl?: string; error?: string } | null>(null)
@@ -165,6 +166,7 @@ export default function StudioDetailPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt,
+          narration,
           assetId: selectedAssetId === 'none' ? undefined : selectedAssetId,
         }),
       })
@@ -313,6 +315,20 @@ export default function StudioDetailPage() {
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="narration">Voiceover script (optional)</Label>
+                <Textarea
+                  id="narration"
+                  placeholder="What the narrator should say. Leave blank to use the prompt above."
+                  value={narration}
+                  onChange={(e) => setNarration(e.target.value)}
+                  rows={2}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Every video gets a voiceover, background music, and burned-in captions automatically.
+                </p>
+              </div>
+
               {imageAssets.length > 0 && (
                 <div className="space-y-2">
                   <Label>Reference photo (optional)</Label>
@@ -341,6 +357,13 @@ export default function StudioDetailPage() {
               <div className="mt-6 text-center">
                 <div className="animate-spin h-8 w-8 border-2 border-orange-500 border-t-transparent rounded-full mx-auto mb-3" />
                 <p className="text-sm text-muted-foreground">Generating your video... this can take a minute or two.</p>
+              </div>
+            )}
+
+            {genStatus?.status === 'composing' && (
+              <div className="mt-6 text-center">
+                <div className="animate-spin h-8 w-8 border-2 border-orange-500 border-t-transparent rounded-full mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground">Adding voiceover, music, and captions...</p>
               </div>
             )}
 

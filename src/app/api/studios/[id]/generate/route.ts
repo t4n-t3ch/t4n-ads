@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { prisma } from '@/lib/prisma'
 import { submitVideoGeneration } from '@/services/videoGeneration'
+import { pickDurationForNarration } from '@/services/captions'
 import { VideoStatus } from '@/types'
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
@@ -25,11 +26,14 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   }
 
   const body = await request.json()
-  const { prompt, duration = 8, assetId } = body
+  const { prompt, narration, duration = 8, assetId } = body
 
   if (!prompt || prompt.trim().length < 3) {
     return NextResponse.json({ error: 'Prompt is required and must be at least 3 characters' }, { status: 400 })
   }
+
+  const narrationScript = narration?.trim() || prompt
+  const resolvedDuration = pickDurationForNarration(duration, narrationScript)
 
   let referenceImageUrl: string | undefined
   if (assetId) {
@@ -50,8 +54,9 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       studioId: studio.id,
       title: prompt.substring(0, 50) + (prompt.length > 50 ? '...' : ''),
       prompt: combinedPrompt,
+      narration: narrationScript,
       aspectRatio: studio.aspectRatio,
-      duration,
+      duration: resolvedDuration,
       status: VideoStatus.PROCESSING,
       progress: 0,
     },
@@ -60,7 +65,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   const callbackUrl = `${request.nextUrl.origin}/api/webhooks/openrouter-video`
 
   const result = await submitVideoGeneration(
-    { prompt: combinedPrompt, aspectRatio: studio.aspectRatio, duration, referenceImageUrl },
+    { prompt: combinedPrompt, aspectRatio: studio.aspectRatio, duration: resolvedDuration, referenceImageUrl },
     callbackUrl
   )
 

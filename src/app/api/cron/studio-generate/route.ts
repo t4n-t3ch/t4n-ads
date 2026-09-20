@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { submitVideoGeneration } from '@/services/videoGeneration'
+import { pickDurationForNarration } from '@/services/captions'
 import { VideoStatus } from '@/types'
 
 // Re-run a studio roughly once a day, allowing slack for cron timing drift.
@@ -33,14 +34,17 @@ export async function GET(request: NextRequest) {
       ? studio.assets[Math.floor(Math.random() * studio.assets.length)]
       : null
 
+    const resolvedDuration = pickDurationForNarration(8, prompt)
+
     const video = await prisma.video.create({
       data: {
         userId: studio.userId,
         studioId: studio.id,
         title: `Daily: ${studio.name}`,
         prompt,
+        narration: prompt,
         aspectRatio: studio.aspectRatio,
-        duration: 8,
+        duration: resolvedDuration,
         status: VideoStatus.PROCESSING,
         progress: 0,
       },
@@ -48,7 +52,7 @@ export async function GET(request: NextRequest) {
 
     const callbackUrl = `${request.nextUrl.origin}/api/webhooks/openrouter-video`
     const result = await submitVideoGeneration(
-      { prompt, aspectRatio: studio.aspectRatio, duration: 8, referenceImageUrl: asset?.url },
+      { prompt, aspectRatio: studio.aspectRatio, duration: resolvedDuration, referenceImageUrl: asset?.url },
       callbackUrl
     )
 

@@ -3,7 +3,9 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   experimental: {
-    // Remove 'appDir' from experimental block
+    // @ffmpeg-installer/ffmpeg resolves its platform binary with a dynamic require()
+    // that webpack can't statically bundle - let Node resolve it at runtime instead.
+    serverComponentsExternalPackages: ['@ffmpeg-installer/ffmpeg'],
   },
   images: {
     domains: [],
