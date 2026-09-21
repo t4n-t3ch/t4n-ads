@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
+import CreditsBadge from '@/components/CreditsBadge'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
@@ -40,9 +41,12 @@ export default function AppHeader() {
             </Link>
           ))}
         </nav>
-        <button onClick={signOut} className="text-sm text-muted-foreground hover:text-foreground">
-          Sign out
-        </button>
+        <div className="flex items-center gap-4">
+          <CreditsBadge compact showLabel={false} />
+          <button onClick={signOut} className="text-sm text-muted-foreground hover:text-foreground">
+            Sign out
+          </button>
+        </div>
       </div>
     </header>
   )

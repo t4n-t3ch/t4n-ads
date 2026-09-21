@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { supabase } from '@/lib/supabase'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { VideoStatus } from '@/types'
 import { generateVoiceover, generateMusic } from '@/services/audioGeneration'
 import { buildCaptionChunks, chunksToSrt } from '@/services/captions'
@@ -56,8 +56,9 @@ export async function finalizeVideoGeneration(videoId: string, rawVideoUrl: stri
       durationSeconds,
     })
 
+    const supabaseAdmin = createAdminClient()
     const fileName = `${video.userId}/${video.id}-${Date.now()}.mp4`
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabaseAdmin.storage
       .from(GENERATED_VIDEOS_BUCKET)
       .upload(fileName, composedBuffer, { contentType: 'video/mp4', upsert: false })
 
@@ -65,7 +66,7 @@ export async function finalizeVideoGeneration(videoId: string, rawVideoUrl: stri
       throw new Error(`Failed to upload composed video: ${uploadError.message}`)
     }
 
-    const { data: urlData } = supabase.storage.from(GENERATED_VIDEOS_BUCKET).getPublicUrl(fileName)
+    const { data: urlData } = supabaseAdmin.storage.from(GENERATED_VIDEOS_BUCKET).getPublicUrl(fileName)
 
     await prisma.video.update({
       where: { id: videoId },

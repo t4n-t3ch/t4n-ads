@@ -17,11 +17,23 @@ export async function GET(request: NextRequest) {
       )
     }
     
-    const userId = session.user.id
-    
-    // Find or create user in Prisma database
-    let user = await prisma.user.findUnique({
-      where: { id: userId },
+    if (!session.user.email) {
+      return NextResponse.json(
+        { error: 'Unauthorized - Please sign in' },
+        { status: 401 }
+      )
+    }
+
+    // Keyed by email, matching every other route that touches this user row
+    // (id is a generated cuid, not the Supabase UUID - see supabaseId for that).
+    const user = await prisma.user.upsert({
+      where: { email: session.user.email },
+      update: {},
+      create: {
+        email: session.user.email,
+        supabaseId: session.user.id,
+        credits: 10, // Default starting credits
+      },
       select: {
         id: true,
         email: true,
@@ -30,24 +42,6 @@ export async function GET(request: NextRequest) {
         updatedAt: true
       }
     })
-    
-    // If user doesn't exist in Prisma yet, create them
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          id: userId,
-          email: session.user.email || '',
-          credits: 10, // Default starting credits
-        },
-        select: {
-          id: true,
-          email: true,
-          credits: true,
-          createdAt: true,
-          updatedAt: true
-        }
-      })
-    }
     
     // Return user profile with credits
     return NextResponse.json({

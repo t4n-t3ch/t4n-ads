@@ -22,6 +22,7 @@ export interface Video {
   title: string;
   description?: string;
   prompt: string;
+  narration?: string;
   aspectRatio: string;
   duration: number;
   style?: string;
@@ -120,17 +121,6 @@ export interface PricingTier {
   prioritySupport: boolean;
 }
 
-export interface AdminStats {
-  totalUsers: number;
-  totalVideos: number;
-  totalCreditsPurchased: number;
-  totalRevenue: number;
-  activeUsers: number;
-  videosByStatus: Record<VideoStatus, number>;
-  recentSignups: User[];
-  recentVideos: Video[];
-}
-
 export interface GalleryFilters {
   status?: VideoStatus;
   aspectRatio?: string;
@@ -147,15 +137,4 @@ export interface PaginatedResponse<T> {
   totalPages: number;
   hasNext: boolean;
   hasPrev: boolean;
-}
-
-export interface Ad {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  image: string;
-  userId: string;
-  createdAt: Date;
-  category?: string;
 }

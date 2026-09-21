@@ -8,16 +8,3 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-export async function getSession() {
-  const { data } = await supabase.auth.getSession();
-  return data.session;
-}
-
-export async function fetchAds() {
-  const { data, error } = await supabase.from('ads').select('*');
-  if (error) {
-    throw error;
-  }
-  return data;
-}

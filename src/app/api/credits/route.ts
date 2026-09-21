@@ -10,20 +10,18 @@ export async function GET(request: NextRequest) {
       data: { session },
     } = await supabase.auth.getSession();
 
-    if (!session) {
+    if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+    const user = await prisma.user.upsert({
+      where: { email: session.user.email },
+      update: {},
+      create: { email: session.user.email, supabaseId: session.user.id, credits: 10 },
       select: { credits: true },
     });
 
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
-    return NextResponse.json({ credits: user.credits });
+    return NextResponse.json({ success: true, credits: user.credits });
   } catch (error) {
     console.error('Error fetching credits:', error);
     return NextResponse.json(
@@ -40,7 +38,7 @@ export async function POST(request: NextRequest) {
       data: { session },
     } = await supabase.auth.getSession();
 
-    if (!session) {
+    if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -54,14 +52,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { credits: true },
+    const user = await prisma.user.upsert({
+      where: { email: session.user.email },
+      update: {},
+      create: { email: session.user.email, supabaseId: session.user.id, credits: 10 },
+      select: { id: true, credits: true },
     });
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
 
     if (user.credits < amount) {
       return NextResponse.json(
@@ -71,7 +67,7 @@ export async function POST(request: NextRequest) {
     }
 
     const updatedUser = await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: user.id },
       data: {
         credits: {
           decrement: amount,
@@ -83,7 +79,7 @@ export async function POST(request: NextRequest) {
     // Create a transaction record
     await prisma.creditTransaction.create({
       data: {
-        userId: session.user.id,
+        userId: user.id,
         amount: -amount,
         description: description || 'Credit deduction',
         balanceAfter: updatedUser.credits,
