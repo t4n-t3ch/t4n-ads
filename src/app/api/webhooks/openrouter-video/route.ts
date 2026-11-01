@@ -18,7 +18,14 @@ export async function POST(request: NextRequest) {
     }
 
     if (type === "video.generation.completed") {
-      const sourceUrl = data.unsigned_urls?.[0];
+      // `urls` is a pre-signed, directly-fetchable link (e.g. GCS) good for a
+      // limited time. `unsigned_urls` are actually OpenRouter API endpoints
+      // that require our OPENROUTER_API_KEY as a Bearer token - fetching them
+      // with no auth returns a 401 JSON error body, not video bytes.
+      const signedUrl = data.urls?.[0];
+      const apiUrl = data.unsigned_urls?.[0];
+      const sourceUrl = signedUrl || apiUrl;
+
       if (!sourceUrl) {
         await prisma.video.update({
           where: { id: video.id },
@@ -27,9 +34,21 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ ok: true });
       }
 
-      let finalUrl = sourceUrl;
+      let finalUrl: string | null = null;
       try {
-        const videoResponse = await fetch(sourceUrl);
+        const fetchHeaders: Record<string, string> = signedUrl
+          ? {}
+          : { Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}` };
+
+        const videoResponse = await fetch(sourceUrl, { headers: fetchHeaders });
+        const contentType = videoResponse.headers.get("content-type") || "";
+
+        if (!videoResponse.ok || !contentType.startsWith("video/")) {
+          throw new Error(
+            `Unexpected video fetch response: ${videoResponse.status} ${contentType}`
+          );
+        }
+
         const arrayBuffer = await videoResponse.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
 
@@ -39,12 +58,23 @@ export async function POST(request: NextRequest) {
           .from("videos")
           .upload(fileName, buffer, { contentType: "video/mp4", upsert: false });
 
-        if (!uploadError) {
-          const { data: urlData } = supabase.storage.from("videos").getPublicUrl(fileName);
-          finalUrl = urlData.publicUrl;
-        }
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage.from("videos").getPublicUrl(fileName);
+        finalUrl = urlData.publicUrl;
       } catch (uploadErr) {
-        console.error("Video re-upload to Supabase failed, using OpenRouter URL directly:", uploadErr);
+        console.error("Video re-upload to Supabase failed:", uploadErr);
+        // Fall back to the signed URL directly if we at least have one -
+        // better than nothing, even though it will expire eventually.
+        finalUrl = signedUrl || null;
+      }
+
+      if (!finalUrl) {
+        await prisma.video.update({
+          where: { id: video.id },
+          data: { status: VideoStatus.FAILED, error: "Could not retrieve generated video" },
+        });
+        return NextResponse.json({ ok: true });
       }
 
       const cost = data.usage?.cost;
