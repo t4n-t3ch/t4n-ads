@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { Video } from '@/types'
 import { formatDate, formatDuration } from '@/lib/utils'
-import { X, Download, Share2, Copy, Check, ExternalLink } from 'lucide-react'
+import { X, Download, Share2, Copy, Check, ExternalLink, Wand2 } from 'lucide-react'
 
 interface VideoModalProps {
   video: Video | null
@@ -200,6 +201,13 @@ export default function VideoModal({ video, isOpen, onClose }: VideoModalProps) 
               <span className="text-sm">Video ID: {video.id.slice(0, 8)}...</span>
             </div>
             <div className="flex items-center gap-3">
+              <Link
+                href={`/generate?fix=${video.id}`}
+                className="px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors text-white flex items-center gap-2"
+              >
+                <Wand2 size={18} />
+                Fix & Regenerate
+              </Link>
               <button
                 onClick={handleShare}
                 disabled={!video.videoUrl}

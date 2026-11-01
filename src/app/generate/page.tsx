@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -24,6 +25,10 @@ type SubjectSummary = {
 }
 
 export default function GeneratePage() {
+  const searchParams = useSearchParams()
+  const fixId = searchParams.get('fix')
+  const [isFixMode, setIsFixMode] = useState(false)
+  const [fixNote, setFixNote] = useState('')
   const [prompt, setPrompt] = useState('')
   const [aspectRatio, setAspectRatio] = useState('16:9')
   const [duration, setDuration] = useState('8')
@@ -44,6 +49,22 @@ export default function GeneratePage() {
       .then((data) => setSubjects(Array.isArray(data) ? data : []))
       .catch(() => setSubjects([]))
   }, [])
+
+  useEffect(() => {
+    if (!fixId) return
+    fetch('/api/gallery')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((videos) => {
+        const original = Array.isArray(videos) ? videos.find((v) => v.id === fixId) : null
+        if (!original) return
+        setPrompt(original.prompt || '')
+        setAspectRatio(original.aspectRatio || '16:9')
+        setDuration(String(original.duration || 8))
+        setIsFixMode(true)
+      })
+      .catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fixId])
 
   useEffect(() => {
     return () => {
@@ -85,8 +106,13 @@ export default function GeneratePage() {
     setLoading(true)
 
     try {
+      const finalPrompt =
+        isFixMode && fixNote.trim()
+          ? `${prompt}\n\nCorrection from a previous attempt: ${fixNote.trim()}`
+          : prompt
+
       const formData = new FormData()
-      formData.append('prompt', prompt)
+      formData.append('prompt', finalPrompt)
       formData.append('aspectRatio', aspectRatio)
       formData.append('duration', duration)
       formData.append('generateAudio', String(generateAudio))
@@ -120,9 +146,11 @@ export default function GeneratePage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Generate AI Video Ad</CardTitle>
+              <CardTitle>{isFixMode ? 'Fix & Regenerate' : 'Generate AI Video Ad'}</CardTitle>
               <CardDescription>
-                Describe the ad you want, and Veo 3.1 will generate it for you.
+                {isFixMode
+                  ? "Reusing the original prompt — say what should be different this time, and we'll regenerate from scratch."
+                  : 'Describe the ad you want, and Veo 3.1 will generate it for you.'}
               </CardDescription>
             </div>
             <div className="flex flex-col items-end gap-2">
@@ -147,6 +175,19 @@ export default function GeneratePage() {
                 rows={4}
               />
             </div>
+
+            {isFixMode && (
+              <div className="space-y-2">
+                <Label htmlFor="fixNote">What should be different this time?</Label>
+                <Textarea
+                  id="fixNote"
+                  placeholder="e.g. the end card said 'Link-UK' instead of 'Trade-Link-UK' - make sure the full name renders correctly"
+                  value={fixNote}
+                  onChange={(e) => setFixNote(e.target.value)}
+                  rows={2}
+                />
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -227,7 +268,7 @@ export default function GeneratePage() {
             </div>
 
             <Button type="submit" disabled={loading || !prompt.trim()} className="w-full">
-              {loading ? 'Generating...' : 'Generate Video'}
+              {loading ? 'Generating...' : isFixMode ? 'Regenerate Video' : 'Generate Video'}
             </Button>
           </form>
 
