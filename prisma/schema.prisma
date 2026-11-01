@@ -1,10 +1,12 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  schemas  = ["public", "auth"]
 }
 
 enum VideoStatus {
@@ -34,6 +36,7 @@ model User {
   subjects           Subject[]
 
   @@map("users")
+  @@schema("public")
 }
 
 model Video {
@@ -66,6 +69,7 @@ model Video {
   costCents     Int?      // actual OpenRouter cost for this generation, in US cents
 
   @@map("videos")
+  @@schema("public")
 }
 
 model Template {
@@ -89,6 +93,7 @@ model Template {
   isPublic      Boolean   @default(false)
 
   @@map("templates")
+  @@schema("public")
 }
 
 model CreditTransaction {
@@ -101,6 +106,7 @@ model CreditTransaction {
   createdAt     DateTime  @default(now())
 
   @@map("credit_transactions")
+  @@schema("public")
 }
 
 model Transaction {
@@ -113,6 +119,7 @@ model Transaction {
   metadata      Json?
   createdAt     DateTime  @default(now())
   @@map("transactions")
+  @@schema("public")
 }
 
 model Subject {
@@ -127,6 +134,7 @@ model Subject {
   videos      Video[]
 
   @@map("subjects")
+  @@schema("public")
 }
 
 model SubjectPhoto {
@@ -138,4 +146,5 @@ model SubjectPhoto {
   createdAt DateTime @default(now())
 
   @@map("subject_photos")
+  @@schema("public")
 }
