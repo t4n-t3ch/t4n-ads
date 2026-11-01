@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
         data: {
           id: userId,
           email: session.user.email || '',
-          credits: 10, // Default starting credits
+          credits: 100000, // internal Trade-Link-UK use — no paywall
         },
         select: {
           id: true,

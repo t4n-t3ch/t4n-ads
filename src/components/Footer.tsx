@@ -118,7 +118,7 @@ const Footer = () => {
           <div className="mt-12 pt-8 border-t border-gray-800">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="text-gray-500 text-sm">
-                © {new Date().getFullYear()} T4N Ads. All rights reserved.
+                © {new Date().getFullYear()} T4N Ads — internal tool for Trade-Link-UK.
               </div>
               <div className="flex items-center space-x-4">
                 {navigation.social.map((item) => (

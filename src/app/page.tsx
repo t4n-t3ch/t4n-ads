@@ -32,7 +32,10 @@ export default function HomePage() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-amber-500">
               <span className="text-sm font-bold text-white">T4N</span>
             </div>
-            <span className="text-lg font-bold text-white">T4N Ads</span>
+            <span className="flex flex-col leading-tight">
+              <span className="text-lg font-bold text-white">T4N Ads</span>
+              <span className="text-[10px] uppercase tracking-wide text-gray-500">Trade-Link-UK</span>
+            </span>
           </Link>
           <div className="flex items-center gap-6">
             <Link

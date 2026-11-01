@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       create: {
         id: session.user.id,
         email: session.user.email || '',
-        credits: 10,
+        credits: 100000, // internal Trade-Link-UK use — no paywall
       },
     });
 
