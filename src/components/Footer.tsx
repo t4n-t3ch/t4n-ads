@@ -18,7 +18,6 @@ const Footer = () => {
       { name: 'Generate', href: '/generate' },
       { name: 'Gallery', href: '/gallery' },
       { name: 'Templates', href: '/templates' },
-      { name: 'Pricing', href: '/pricing' },
     ],
     company: [
       { name: 'About', href: '/about' },

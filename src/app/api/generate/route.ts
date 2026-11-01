@@ -6,6 +6,7 @@ import { submitVideoGeneration } from '@/services/videoGeneration';
 import { uploadImage } from '@/lib/actions/storage';
 import { VideoStatus } from '@/types';
 import type { Database } from '@/types/supabase';
+import { isEmailAllowed } from '@/lib/allowlist';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,6 +15,10 @@ export async function POST(request: NextRequest) {
 
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (!isEmailAllowed(session.user.email)) {
+      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
     const formData = await request.formData();

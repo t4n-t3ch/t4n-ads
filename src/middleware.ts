@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import { isEmailAllowed } from '@/lib/allowlist'
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
@@ -16,6 +17,13 @@ export async function middleware(request: NextRequest) {
     if (!session) {
       const loginUrl = new URL('/login', request.url)
       loginUrl.searchParams.set('redirect', path)
+      return NextResponse.redirect(loginUrl)
+    }
+
+    if (!isEmailAllowed(session.user.email)) {
+      await supabase.auth.signOut()
+      const loginUrl = new URL('/login', request.url)
+      loginUrl.searchParams.set('error', 'not_authorized')
       return NextResponse.redirect(loginUrl)
     }
   }

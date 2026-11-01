@@ -63,6 +63,7 @@ model Video {
   jobId         String?   @unique
   subjectId     String?
   subject       Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  costCents     Int?      // actual OpenRouter cost for this generation, in US cents
 
   @@map("videos")
 }

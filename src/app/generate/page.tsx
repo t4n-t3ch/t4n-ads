@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import UsageBadge from '@/components/UsageBadge'
 
 type VideoStatusResponse = {
   id: string
@@ -124,9 +125,12 @@ export default function GeneratePage() {
                 Describe the ad you want, and Veo 3.1 will generate it for you.
               </CardDescription>
             </div>
-            <Link href="/subjects" className="text-sm text-orange-400 hover:text-orange-300 whitespace-nowrap">
-              Manage subjects
-            </Link>
+            <div className="flex flex-col items-end gap-2">
+              <UsageBadge />
+              <Link href="/subjects" className="text-sm text-orange-400 hover:text-orange-300 whitespace-nowrap">
+                Manage subjects
+              </Link>
+            </div>
           </div>
         </CardHeader>
         <CardContent>

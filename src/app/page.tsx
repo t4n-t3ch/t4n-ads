@@ -39,12 +39,6 @@ export default function HomePage() {
           </Link>
           <div className="flex items-center gap-6">
             <Link
-              href="/pricing"
-              className="hidden text-sm text-gray-400 transition-colors hover:text-white sm:block"
-            >
-              Pricing
-            </Link>
-            <Link
               href="/login"
               className="hidden text-sm text-gray-400 transition-colors hover:text-white sm:block"
             >
@@ -84,12 +78,6 @@ export default function HomePage() {
             >
               Start creating
               <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/pricing"
-              className="rounded-lg border border-white/15 px-6 py-3 font-medium text-white transition-colors hover:bg-white/5"
-            >
-              View pricing
             </Link>
           </div>
         </section>

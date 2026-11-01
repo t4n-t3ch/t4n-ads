@@ -47,12 +47,16 @@ export async function POST(request: NextRequest) {
         console.error("Video re-upload to Supabase failed, using OpenRouter URL directly:", uploadErr);
       }
 
+      const cost = data.usage?.cost;
+      const costCents = typeof cost === "number" ? Math.round(cost * 100) : undefined;
+
       await prisma.video.update({
         where: { id: video.id },
         data: {
           status: VideoStatus.COMPLETED,
           progress: 100,
           videoUrl: finalUrl,
+          costCents,
         },
       });
     } else if (type === "video.generation.failed" || type === "video.generation.cancelled" || type === "video.generation.expired") {
