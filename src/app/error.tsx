@@ -106,12 +106,6 @@ export default function Error({
               Contact Support
             </a>
             <Link
-              href="/dashboard"
-              className="text-gray-400 hover:text-gray-300 transition-colors text-sm"
-            >
-              Visit Dashboard
-            </Link>
-            <Link
               href="/gallery"
               className="text-gray-400 hover:text-gray-300 transition-colors text-sm"
             >
