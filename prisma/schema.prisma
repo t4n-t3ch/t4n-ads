@@ -31,6 +31,7 @@ model User {
   subscriptionCurrentPeriodEnd DateTime?
   creditTransactions CreditTransaction[]
   transactions       Transaction[]
+  subjects           Subject[]
 
   @@map("users")
 }
@@ -60,6 +61,8 @@ model Video {
   style         String?
   resolution    String?
   jobId         String?   @unique
+  subjectId     String?
+  subject       Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
 
   @@map("videos")
 }
@@ -109,4 +112,29 @@ model Transaction {
   metadata      Json?
   createdAt     DateTime  @default(now())
   @@map("transactions")
+}
+
+model Subject {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  photos      SubjectPhoto[]
+  videos      Video[]
+
+  @@map("subjects")
+}
+
+model SubjectPhoto {
+  id        String   @id @default(cuid())
+  subjectId String
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  url       String
+  caption   String?
+  createdAt DateTime @default(now())
+
+  @@map("subject_photos")
 }

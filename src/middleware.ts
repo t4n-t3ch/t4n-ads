@@ -4,7 +4,8 @@ import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
-  const isProtectedRoute = path.startsWith('/generate') || path.startsWith('/gallery')
+  const isProtectedRoute =
+    path.startsWith('/generate') || path.startsWith('/gallery') || path.startsWith('/subjects')
 
   const response = NextResponse.next()
 
@@ -23,5 +24,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/generate/:path*', '/gallery/:path*']
+  matcher: ['/generate/:path*', '/gallery/:path*', '/subjects/:path*']
 }

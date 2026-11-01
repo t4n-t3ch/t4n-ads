@@ -9,6 +9,11 @@ export async function uploadImage(
 ): Promise<{ url: string | null; error: string | null }> {
   try {
     const supabase = createClient();
+    // The auth-helpers client only attaches the user's access token to
+    // subsequent requests (e.g. storage uploads) once a session has been
+    // read — without this, uploads go out as the anon role and get
+    // rejected by any RLS policy scoped to `authenticated`.
+    await supabase.auth.getSession();
 
     // Generate a unique filename
     const fileExt = file.name.split(".").pop();
