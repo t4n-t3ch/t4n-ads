@@ -155,9 +155,14 @@ export default function GeneratePage() {
             </div>
             <div className="flex flex-col items-end gap-2">
               <UsageBadge />
-              <Link href="/subjects" className="text-sm text-orange-400 hover:text-orange-300 whitespace-nowrap">
-                Manage subjects
-              </Link>
+              <div className="flex gap-3">
+                <Link href="/subjects" className="text-sm text-orange-400 hover:text-orange-300 whitespace-nowrap">
+                  Manage subjects
+                </Link>
+                <Link href="/automations" className="text-sm text-orange-400 hover:text-orange-300 whitespace-nowrap">
+                  Automations
+                </Link>
+              </div>
             </div>
           </div>
         </CardHeader>

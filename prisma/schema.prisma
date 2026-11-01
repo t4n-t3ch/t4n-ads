@@ -36,6 +36,7 @@ model User {
   creditTransactions CreditTransaction[]
   transactions       Transaction[]
   subjects           Subject[]
+  automations        Automation[]
 
   @@map("users")
   @@schema("app")
@@ -134,6 +135,7 @@ model Subject {
   updatedAt   DateTime  @updatedAt
   photos      SubjectPhoto[]
   videos      Video[]
+  automations Automation[]
 
   @@map("subjects")
   @@schema("app")
@@ -148,5 +150,32 @@ model SubjectPhoto {
   createdAt DateTime @default(now())
 
   @@map("subject_photos")
+  @@schema("app")
+}
+
+model Automation {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectId      String
+  subject        Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  name           String
+  // "fixed": promptTemplate reused every run. "ai_varied": styleGoal is
+  // given to an LLM to write a fresh prompt each run.
+  promptMode     String
+  promptTemplate String?
+  styleGoal      String?
+  // comma-separated day-of-week ints, 0 (Sun) - 6 (Sat)
+  daysOfWeek     String
+  aspectRatio    String   @default("16:9")
+  duration       Int      @default(8)
+  enabled        Boolean  @default(true)
+  // "YYYY-MM-DD" (UTC) of the last run, so the daily cron tick doesn't
+  // generate twice for the same day.
+  lastRunDate    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("automations")
   @@schema("app")
 }

@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { uploadImage } from '@/lib/actions/storage';
 import type { Database } from '@/types/supabase';
 
-const MAX_PHOTOS_PER_SUBJECT = 6;
+const MAX_PHOTOS_PER_SUBJECT = 200;
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {

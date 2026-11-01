@@ -23,7 +23,7 @@ type SubjectDetail = {
   photos: SubjectPhoto[]
 }
 
-const MAX_PHOTOS = 6
+const MAX_PHOTOS = 200
 
 export default function SubjectDetailPage() {
   const params = useParams()
@@ -36,6 +36,7 @@ export default function SubjectDetailPage() {
   const [description, setDescription] = useState('')
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const load = () => {
@@ -93,27 +94,33 @@ export default function SubjectDetailPage() {
   }
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const files = Array.from(e.target.files || [])
     e.target.value = ''
-    if (!file) return
+    if (files.length === 0) return
 
     setUploading(true)
     setError(null)
-    try {
-      const formData = new FormData()
-      formData.append('photo', file)
-      const res = await fetch(`/api/subjects/${id}/photos`, { method: 'POST', body: formData })
-      const data = await res.json()
-      if (!res.ok) {
-        setError(data.error || 'Failed to upload photo')
-        return
+    setUploadProgress({ done: 0, total: files.length })
+
+    let failures = 0
+    for (let i = 0; i < files.length; i++) {
+      try {
+        const formData = new FormData()
+        formData.append('photo', files[i])
+        const res = await fetch(`/api/subjects/${id}/photos`, { method: 'POST', body: formData })
+        if (!res.ok) failures++
+      } catch {
+        failures++
       }
-      load()
-    } catch {
-      setError('Failed to upload photo')
-    } finally {
-      setUploading(false)
+      setUploadProgress({ done: i + 1, total: files.length })
     }
+
+    if (failures > 0) {
+      setError(`${failures} of ${files.length} photo(s) failed to upload (archive may be at the ${MAX_PHOTOS}-photo limit)`)
+    }
+    setUploading(false)
+    setUploadProgress(null)
+    load()
   }
 
   const handleDeletePhoto = async (photoId: string) => {
@@ -175,7 +182,9 @@ export default function SubjectDetailPage() {
         <CardHeader>
           <CardTitle>Reference photos</CardTitle>
           <p className="text-sm text-gray-400">
-            Up to {MAX_PHOTOS} photos. Used as style/content references when generating with this subject.
+            Up to {MAX_PHOTOS} photos - select a whole folder of screenshots/images at once. Used as
+            style/content references when generating with this subject, and as the source archive for
+            any automations tied to it.
           </p>
         </CardHeader>
         <CardContent>
@@ -200,10 +209,15 @@ export default function SubjectDetailPage() {
             {subject.photos.length < MAX_PHOTOS && (
               <label className="aspect-square border-2 border-dashed border-white/15 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-white/30 transition-colors">
                 <Camera className="w-8 h-8 text-gray-500 mb-2" />
-                <span className="text-sm text-gray-500">{uploading ? 'Uploading...' : 'Add photo'}</span>
+                <span className="text-sm text-gray-500 text-center px-2">
+                  {uploading
+                    ? `Uploading ${uploadProgress?.done ?? 0}/${uploadProgress?.total ?? 0}...`
+                    : 'Add photos'}
+                </span>
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   onChange={handlePhotoUpload}
                   disabled={uploading}
                   className="hidden"
