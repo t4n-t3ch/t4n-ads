@@ -6,7 +6,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["public", "auth"]
+  schemas  = ["app"]
 }
 
 enum VideoStatus {
@@ -14,6 +14,8 @@ enum VideoStatus {
   processing
   completed
   failed
+
+  @@schema("app")
 }
 
 model User {
@@ -36,7 +38,7 @@ model User {
   subjects           Subject[]
 
   @@map("users")
-  @@schema("public")
+  @@schema("app")
 }
 
 model Video {
@@ -69,7 +71,7 @@ model Video {
   costCents     Int?      // actual OpenRouter cost for this generation, in US cents
 
   @@map("videos")
-  @@schema("public")
+  @@schema("app")
 }
 
 model Template {
@@ -93,7 +95,7 @@ model Template {
   isPublic      Boolean   @default(false)
 
   @@map("templates")
-  @@schema("public")
+  @@schema("app")
 }
 
 model CreditTransaction {
@@ -106,7 +108,7 @@ model CreditTransaction {
   createdAt     DateTime  @default(now())
 
   @@map("credit_transactions")
-  @@schema("public")
+  @@schema("app")
 }
 
 model Transaction {
@@ -119,7 +121,7 @@ model Transaction {
   metadata      Json?
   createdAt     DateTime  @default(now())
   @@map("transactions")
-  @@schema("public")
+  @@schema("app")
 }
 
 model Subject {
@@ -134,7 +136,7 @@ model Subject {
   videos      Video[]
 
   @@map("subjects")
-  @@schema("public")
+  @@schema("app")
 }
 
 model SubjectPhoto {
@@ -146,5 +148,5 @@ model SubjectPhoto {
   createdAt DateTime @default(now())
 
   @@map("subject_photos")
-  @@schema("public")
+  @@schema("app")
 }
