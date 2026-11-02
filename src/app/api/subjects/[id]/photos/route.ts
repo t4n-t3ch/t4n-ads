@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { prisma } from '@/lib/prisma';
 import { uploadImage } from '@/lib/actions/storage';
+import { resolveAccountUser } from '@/lib/accountAccess';
 import type { Database } from '@/types/supabase';
 
 const MAX_PHOTOS_PER_SUBJECT = 200;
@@ -16,8 +17,10 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id: userId } = await resolveAccountUser(session.user);
+
     const subject = await prisma.subject.findFirst({
-      where: { id: params.id, userId: session.user.id },
+      where: { id: params.id, userId },
       include: { _count: { select: { photos: true } } },
     });
 

@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { prisma } from '@/lib/prisma';
 import { isEmailAllowed } from '@/lib/allowlist';
+import { resolveAccountUser } from '@/lib/accountAccess';
 import type { Database } from '@/types/supabase';
 
 const VALID_PROMPT_MODES = ['fixed', 'ai_varied'];
@@ -25,8 +26,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id: userId } = await resolveAccountUser(session.user);
+
     const automations = await prisma.automation.findMany({
-      where: { userId: session.user.id },
+      where: { userId },
       orderBy: { createdAt: 'desc' },
       include: { subject: { select: { id: true, name: true } } },
     });
@@ -79,8 +82,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Pick at least one day of the week' }, { status: 400 });
     }
 
+    const { id: userId } = await resolveAccountUser(session.user);
+
     const subject = await prisma.subject.findFirst({
-      where: { id: subjectId, userId: session.user.id },
+      where: { id: subjectId, userId },
     });
     if (!subject) {
       return NextResponse.json({ error: 'Subject not found' }, { status: 404 });
@@ -88,7 +93,7 @@ export async function POST(request: NextRequest) {
 
     const automation = await prisma.automation.create({
       data: {
-        userId: session.user.id,
+        userId,
         subjectId,
         name,
         promptMode,

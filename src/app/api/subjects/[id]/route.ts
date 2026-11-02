@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { prisma } from '@/lib/prisma';
+import { resolveAccountUser } from '@/lib/accountAccess';
 import type { Database } from '@/types/supabase';
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
@@ -13,8 +14,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id: userId } = await resolveAccountUser(session.user);
+
     const subject = await prisma.subject.findFirst({
-      where: { id: params.id, userId: session.user.id },
+      where: { id: params.id, userId },
       include: { photos: { orderBy: { createdAt: 'desc' } } },
     });
 
@@ -38,8 +41,10 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id: userId } = await resolveAccountUser(session.user);
+
     const existing = await prisma.subject.findFirst({
-      where: { id: params.id, userId: session.user.id },
+      where: { id: params.id, userId },
     });
 
     if (!existing) {
@@ -72,8 +77,10 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id: userId } = await resolveAccountUser(session.user);
+
     const existing = await prisma.subject.findFirst({
-      where: { id: params.id, userId: session.user.id },
+      where: { id: params.id, userId },
     });
 
     if (!existing) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { prisma } from '@/lib/prisma';
+import { resolveAccountUser } from '@/lib/accountAccess';
 import type { Database } from '@/types/supabase';
 
 function parseDaysOfWeek(input: unknown): string | null {
@@ -22,8 +23,10 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id: userId } = await resolveAccountUser(session.user);
+
     const existing = await prisma.automation.findFirst({
-      where: { id: params.id, userId: session.user.id },
+      where: { id: params.id, userId },
     });
     if (!existing) {
       return NextResponse.json({ error: 'Automation not found' }, { status: 404 });
@@ -67,8 +70,10 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id: userId } = await resolveAccountUser(session.user);
+
     const existing = await prisma.automation.findFirst({
-      where: { id: params.id, userId: session.user.id },
+      where: { id: params.id, userId },
     });
     if (!existing) {
       return NextResponse.json({ error: 'Automation not found' }, { status: 404 });

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
+import { resolveAccountUser } from '@/lib/accountAccess';
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,9 +15,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id: userId } = await resolveAccountUser(session.user);
+
     const [mine, household] = await Promise.all([
       prisma.video.aggregate({
-        where: { userId: session.user.id, costCents: { not: null } },
+        where: { userId, costCents: { not: null } },
         _sum: { costCents: true },
         _count: true,
       }),

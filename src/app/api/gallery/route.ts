@@ -2,6 +2,7 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { resolveAccountUser } from '@/lib/accountAccess'
 import { VideoStatus } from '@/types'
 
 export async function GET(request: NextRequest) {
@@ -16,8 +17,10 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    const { id: userId } = await resolveAccountUser(session.user)
+
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email! },
+      where: { id: userId },
       include: {
         videos: {
           orderBy: { createdAt: 'desc' },

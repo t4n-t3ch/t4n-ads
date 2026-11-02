@@ -2,6 +2,7 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { resolveAccountUser } from '@/lib/accountAccess'
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,8 +18,8 @@ export async function GET(request: NextRequest) {
       )
     }
     
-    const userId = session.user.id
-    
+    const { id: userId, email: userEmail } = await resolveAccountUser(session.user)
+
     // Find or create user in Prisma database
     let user = await prisma.user.findUnique({
       where: { id: userId },
@@ -30,13 +31,13 @@ export async function GET(request: NextRequest) {
         updatedAt: true
       }
     })
-    
+
     // If user doesn't exist in Prisma yet, create them
     if (!user) {
       user = await prisma.user.create({
         data: {
           id: userId,
-          email: session.user.email || '',
+          email: userEmail,
           credits: 100000, // internal Trade-Link-UK use — no paywall
         },
         select: {

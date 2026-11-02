@@ -7,6 +7,7 @@ import { uploadImage } from '@/lib/actions/storage';
 import { VideoStatus } from '@/types';
 import type { Database } from '@/types/supabase';
 import { isEmailAllowed } from '@/lib/allowlist';
+import { resolveAccountUser } from '@/lib/accountAccess';
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,15 +39,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const { id: userId, email: userEmail } = await resolveAccountUser(session.user);
+
     // Ensure a matching User row exists before creating a Video that
     // references it via foreign key — a brand new user may not have one yet
     // if this is their first action after signing up.
     await prisma.user.upsert({
-      where: { id: session.user.id },
+      where: { id: userId },
       update: {},
       create: {
-        id: session.user.id,
-        email: session.user.email || '',
+        id: userId,
+        email: userEmail,
         credits: 100000, // internal Trade-Link-UK use — no paywall
       },
     });
@@ -56,7 +59,7 @@ export async function POST(request: NextRequest) {
 
     if (subjectId) {
       const subject = await prisma.subject.findFirst({
-        where: { id: subjectId, userId: session.user.id },
+        where: { id: subjectId, userId },
         include: { photos: true },
       });
 
@@ -73,7 +76,7 @@ export async function POST(request: NextRequest) {
       const { url, error } = await uploadImage(
         referenceImage,
         'videos',
-        `references/${session.user.id}`
+        `references/${userId}`
       );
       if (error) {
         return NextResponse.json({ error: `Failed to upload reference photo: ${error}` }, { status: 500 });
@@ -83,7 +86,7 @@ export async function POST(request: NextRequest) {
 
     const video = await prisma.video.create({
       data: {
-        userId: session.user.id,
+        userId,
         title: prompt.substring(0, 50) + (prompt.length > 50 ? '...' : ''),
         prompt,
         aspectRatio,

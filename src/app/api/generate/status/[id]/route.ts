@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { prisma } from '@/lib/prisma';
+import { resolveAccountUser } from '@/lib/accountAccess';
 import type { Database } from '@/types/supabase';
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
@@ -13,12 +14,14 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id: userId } = await resolveAccountUser(session.user);
+
     const video = await prisma.video.findUnique({ where: { id: params.id } });
     if (!video) {
       return NextResponse.json({ error: 'Video not found' }, { status: 404 });
     }
 
-    if (video.userId !== session.user.id) {
+    if (video.userId !== userId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

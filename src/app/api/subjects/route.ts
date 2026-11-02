@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { prisma } from '@/lib/prisma';
+import { resolveAccountUser } from '@/lib/accountAccess';
 import type { Database } from '@/types/supabase';
 
 export async function GET(request: NextRequest) {
@@ -13,8 +14,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id: userId } = await resolveAccountUser(session.user);
+
     const subjects = await prisma.subject.findMany({
-      where: { userId: session.user.id },
+      where: { userId },
       orderBy: { createdAt: 'desc' },
       include: { _count: { select: { photos: true } } },
     });
@@ -51,19 +54,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 });
     }
 
+    const { id: userId, email: userEmail } = await resolveAccountUser(session.user);
+
     await prisma.user.upsert({
-      where: { id: session.user.id },
+      where: { id: userId },
       update: {},
       create: {
-        id: session.user.id,
-        email: session.user.email || '',
+        id: userId,
+        email: userEmail,
         credits: 100000, // internal Trade-Link-UK use — no paywall
       },
     });
 
     const subject = await prisma.subject.create({
       data: {
-        userId: session.user.id,
+        userId,
         name,
         description: description || null,
       },
