@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useVideos } from '@/hooks/useVideos'
 import VideoCard from '@/components/VideoCard'
 import VideoModal from '@/components/VideoModal'
+import Link from 'next/link'
 import { FiVideo, FiFilter, FiSearch, FiTrash2, FiRefreshCw } from 'react-icons/fi'
 
 export default function GalleryPage() {
@@ -123,9 +124,22 @@ export default function GalleryPage() {
     <div className="min-h-screen bg-[#0f0f11] text-white p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">Video Gallery</h1>
-          <p className="text-gray-400">Browse and manage your generated videos</p>
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">Video Gallery</h1>
+            <p className="text-gray-400">Browse and manage your generated videos</p>
+          </div>
+          <div className="flex gap-3">
+            <Link href="/generate" className="text-sm text-orange-400 hover:text-orange-300 whitespace-nowrap">
+              Generate
+            </Link>
+            <Link href="/subjects" className="text-sm text-orange-400 hover:text-orange-300 whitespace-nowrap">
+              Manage subjects
+            </Link>
+            <Link href="/automations" className="text-sm text-orange-400 hover:text-orange-300 whitespace-nowrap">
+              Automations
+            </Link>
+          </div>
         </div>
 
         {/* Stats */}
