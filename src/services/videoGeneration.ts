@@ -51,6 +51,12 @@ export async function generateVariedPrompt(
               'Given a creative direction, write one fresh, specific, visually ' +
               'descriptive prompt (2-4 sentences) for an 8-second ad. Vary the ' +
               'angle/scene each time so repeated runs don\'t look identical. ' +
+              'Veo cannot reliably render legible on-screen text - words, slogans, ' +
+              'and app/UI screens come out as garbled, misspelled nonsense. Never ' +
+              'describe on-screen text, captions, slogans, or app/UI interfaces ' +
+              'with any text in them (e.g. do not write things like "the slogan ' +
+              'flashes on screen" or "the app shows..."). Convey the message ' +
+              'through spoken dialogue/narration and visual action only. ' +
               'Reply with only the prompt text, no preamble or quotes.',
           },
           { role: 'user', content: userContent },
@@ -94,10 +100,19 @@ export async function submitVideoGeneration(
     "abbreviated, merged, or missing a hyphen (e.g. not \"Link-UK\", not " +
     "\"TradeLinkUK\", not \"Trade-LinUK\")."
 
+  const textGuard =
+    "\n\nIMPORTANT: do not render any on-screen text, captions, slogans, or " +
+    "app/UI screens with words in them - video generation cannot render " +
+    "legible text and it will come out as garbled, misspelled nonsense. " +
+    "Convey the message through spoken dialogue/narration and visual action " +
+    "only, with no text overlays. The only exception is the brand name " +
+    "\"Trade-Link-UK\" alone (e.g. on a logo, van, or t-shirt), with no other " +
+    "words next to it."
+
   const prompt =
     (options.subjectContext
       ? `Brand context: ${options.subjectContext}\n\n${options.prompt}`
-      : options.prompt) + brandGuard
+      : options.prompt) + brandGuard + textGuard
 
   const body: Record<string, unknown> = {
     model: 'google/veo-3.1',
