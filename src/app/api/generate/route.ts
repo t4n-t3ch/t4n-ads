@@ -55,20 +55,21 @@ export async function POST(request: NextRequest) {
     });
 
     let subjectContext: string | undefined;
-    let referenceImageUrls: string[] | undefined;
 
     if (subjectId) {
       const subject = await prisma.subject.findFirst({
         where: { id: subjectId, userId },
-        include: { photos: true },
       });
 
       if (!subject) {
         return NextResponse.json({ error: 'Subject not found' }, { status: 404 });
       }
 
+      // Subject photos are brand/topic material (what the ad is about), not a
+      // single consistent subject for Veo to reproduce - sending them as
+      // input_references gets rejected by Veo as an incoherent reference set.
+      // The description alone is enough to ground the generated prompt.
       subjectContext = subject.description || undefined;
-      referenceImageUrls = subject.photos.map((p) => p.url);
     }
 
     let frameImageUrl: string | undefined;
@@ -108,7 +109,7 @@ export async function POST(request: NextRequest) {
     const callbackUrl = `${origin}/api/webhooks/openrouter-video`;
 
     const result = await submitVideoGeneration(
-      { prompt, aspectRatio: aspectRatio as '16:9' | '9:16' | '1:1', duration, generateAudio, frameImageUrl, referenceImageUrls, subjectContext },
+      { prompt, aspectRatio: aspectRatio as '16:9' | '9:16' | '1:1', duration, generateAudio, frameImageUrl, subjectContext },
       callbackUrl
     );
 

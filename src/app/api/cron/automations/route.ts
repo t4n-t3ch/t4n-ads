@@ -12,15 +12,6 @@ function todayUTC(): { dateStr: string; dayOfWeek: number } {
   return { dateStr, dayOfWeek };
 }
 
-function pickRandom<T>(arr: T[], n: number): T[] {
-  const copy = [...arr];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    ;[copy[i], copy[j]] = [copy[j], copy[i]]
-  }
-  return copy.slice(0, n);
-}
-
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
   const expected = process.env.CRON_SECRET;
@@ -36,7 +27,7 @@ export async function GET(request: NextRequest) {
 
   const candidates = await prisma.automation.findMany({
     where: { enabled: true },
-    include: { subject: { include: { photos: true } } },
+    include: { subject: true },
   });
 
   const due = candidates.filter((a) => {
@@ -77,11 +68,6 @@ export async function GET(request: NextRequest) {
         prompt = generated.prompt;
       }
 
-      const referenceImageUrls = pickRandom(
-        automation.subject.photos.map((p) => p.url),
-        3
-      );
-
       await prisma.user.upsert({
         where: { id: automation.userId },
         update: {},
@@ -107,7 +93,6 @@ export async function GET(request: NextRequest) {
           aspectRatio: automation.aspectRatio as '16:9' | '9:16' | '1:1',
           duration: automation.duration,
           generateAudio: true,
-          referenceImageUrls,
           subjectContext: automation.subject.description || undefined,
         },
         callbackUrl

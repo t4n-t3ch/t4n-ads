@@ -243,7 +243,7 @@ export default function GeneratePage() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-gray-500">
-                Applies the subject&apos;s saved description and reference photos to this generation.
+                Applies the subject&apos;s saved description to this generation.
               </p>
             </div>
 
