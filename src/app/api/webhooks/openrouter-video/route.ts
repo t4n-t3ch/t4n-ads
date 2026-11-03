@@ -2,7 +2,12 @@
 import { prisma } from "@/lib/prisma";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { submitVideoGeneration } from "@/services/videoGeneration";
+import { appendOutro } from "@/lib/video/concatOutro";
 import { VideoStatus } from "@/types";
+
+// Appending an outro re-encodes the whole clip, which takes longer than a
+// plain upload - give it more room than the default function timeout.
+export const maxDuration = 60;
 
 // Veo rejects a reference-image set it can't reconcile into one consistent
 // subject (e.g. a logo + unrelated screenshots). Automations pick reference
@@ -60,7 +65,24 @@ export async function POST(request: NextRequest) {
         }
 
         const arrayBuffer = await videoResponse.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
+        let buffer: Buffer = Buffer.from(arrayBuffer);
+
+        // Append the account's chosen outro clip, if any - but never to the
+        // outro video itself, and never let a concat failure block delivery
+        // of the plain generated video.
+        if (!video.isOutro) {
+          try {
+            const outro = await prisma.video.findFirst({
+              where: { userId: video.userId, isOutro: true, videoUrl: { not: null } },
+              select: { videoUrl: true },
+            });
+            if (outro?.videoUrl) {
+              buffer = await appendOutro(buffer, outro.videoUrl, video.aspectRatio);
+            }
+          } catch (outroErr) {
+            console.error("Appending outro video failed, delivering video without it:", outroErr);
+          }
+        }
 
         const supabase = createAdminClient();
         const fileName = `${video.id}-${Date.now()}.mp4`;

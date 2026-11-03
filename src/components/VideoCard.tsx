@@ -99,6 +99,13 @@ export function VideoCard({ video, onDelete, onDownload, onClick, className }: V
           {getAspectRatioLabel()}
         </div>
 
+        {/* Outro Indicator */}
+        {video.isOutro && (
+          <div className="absolute top-2 right-2 px-2 py-1 bg-orange-500/90 rounded-md text-xs font-medium text-white">
+            Outro
+          </div>
+        )}
+
         {/* Status Overlay */}
         {video.status !== VideoStatus.COMPLETED && (
           <div className="absolute inset-0 bg-black/60 flex items-center justify-center">

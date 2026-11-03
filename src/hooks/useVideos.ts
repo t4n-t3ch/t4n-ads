@@ -9,6 +9,7 @@ interface UseVideosReturn {
   error: string | null
   refetch: () => Promise<void>
   deleteVideo: (id: string) => Promise<boolean>
+  setOutro: (id: string, isOutro: boolean) => Promise<boolean>
 }
 
 export function useVideos(): UseVideosReturn {
@@ -53,6 +54,33 @@ export function useVideos(): UseVideosReturn {
     } catch (err) {
       console.error('Error deleting video:', err)
       setError(err instanceof Error ? err.message : 'Failed to delete video')
+      return false
+    }
+  }, [])
+
+  const setOutro = useCallback(async (id: string, isOutro: boolean): Promise<boolean> => {
+    try {
+      const response = await fetch(`/api/videos/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isOutro }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to update video: ${response.status}`)
+      }
+
+      // Only one outro per account - clear the flag everywhere else locally too.
+      setVideos(prev =>
+        prev.map(video => {
+          if (video.id === id) return { ...video, isOutro }
+          return isOutro ? { ...video, isOutro: false } : video
+        })
+      )
+      return true
+    } catch (err) {
+      console.error('Error updating outro video:', err)
+      setError(err instanceof Error ? err.message : 'Failed to update video')
       return false
     }
   }, [])
@@ -102,5 +130,6 @@ export function useVideos(): UseVideosReturn {
     error,
     refetch: fetchVideos,
     deleteVideo,
+    setOutro,
   }
 }

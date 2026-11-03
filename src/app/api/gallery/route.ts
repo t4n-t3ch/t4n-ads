@@ -57,6 +57,7 @@ export async function GET(request: NextRequest) {
       aspectRatio: video.aspectRatio,
       duration: video.duration,
       style: video.style,
+      isOutro: video.isOutro,
       createdAt: video.createdAt.toISOString(),
       updatedAt: video.updatedAt.toISOString(),
       userId: video.userId,

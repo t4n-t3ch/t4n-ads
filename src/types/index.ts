@@ -32,6 +32,7 @@ export interface Video {
   errorMessage?: string;
   metadata?: Record<string, any>;
   resolution?: string;
+  isOutro?: boolean;
   createdAt: Date;
   updatedAt: Date;
   completedAt?: Date;

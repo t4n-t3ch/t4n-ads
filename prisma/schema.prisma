@@ -70,6 +70,7 @@ model Video {
   subjectId     String?
   subject       Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
   costCents     Int?      // actual OpenRouter cost for this generation, in US cents
+  isOutro       Boolean   @default(false) // appended to the end of every other completed video for this user
 
   @@map("videos")
   @@schema("app")

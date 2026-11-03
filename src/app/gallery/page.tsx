@@ -14,7 +14,7 @@ import { FiVideo, FiFilter, FiSearch, FiTrash2, FiRefreshCw } from 'react-icons/
 export default function GalleryPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
-  const { videos, loading, error, refetch, deleteVideo } = useVideos()
+  const { videos, loading, error, refetch, deleteVideo, setOutro } = useVideos()
   
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -71,6 +71,14 @@ export default function GalleryPage() {
       await deleteVideo(videoId)
     } finally {
       setIsDeleting(null)
+    }
+  }
+
+  const handleToggleOutro = async (video: Video) => {
+    const next = !video.isOutro
+    const ok = await setOutro(video.id, next)
+    if (ok) {
+      setSelectedVideo(prev => (prev ? { ...prev, isOutro: next } : prev))
     }
   }
 
@@ -283,6 +291,7 @@ export default function GalleryPage() {
           video={selectedVideo}
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
+          onToggleOutro={handleToggleOutro}
         />
       </div>
     </div>

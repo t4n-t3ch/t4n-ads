@@ -4,17 +4,19 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Video } from '@/types'
 import { formatDate, formatDuration } from '@/lib/utils'
-import { X, Download, Share2, Copy, Check, ExternalLink, Wand2 } from 'lucide-react'
+import { X, Download, Share2, Copy, Check, ExternalLink, Wand2, Star } from 'lucide-react'
 
 interface VideoModalProps {
   video: Video | null
   isOpen: boolean
   onClose: () => void
+  onToggleOutro?: (video: Video) => void
 }
 
-export default function VideoModal({ video, isOpen, onClose }: VideoModalProps) {
+export default function VideoModal({ video, isOpen, onClose, onToggleOutro }: VideoModalProps) {
   const [copied, setCopied] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [isTogglingOutro, setIsTogglingOutro] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
@@ -72,6 +74,16 @@ export default function VideoModal({ video, isOpen, onClose }: VideoModalProps) 
     }
   }
 
+  const handleToggleOutro = async () => {
+    if (!video || !onToggleOutro) return
+    setIsTogglingOutro(true)
+    try {
+      await onToggleOutro(video)
+    } finally {
+      setIsTogglingOutro(false)
+    }
+  }
+
   if (!isOpen || !video) return null
 
   return (
@@ -80,7 +92,15 @@ export default function VideoModal({ video, isOpen, onClose }: VideoModalProps) 
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-800">
           <div>
-            <h2 className="text-2xl font-bold text-white">{video.title || 'Untitled Video'}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-2xl font-bold text-white">{video.title || 'Untitled Video'}</h2>
+              {video.isOutro && (
+                <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 text-xs font-medium">
+                  <Star size={12} fill="currentColor" />
+                  Outro
+                </span>
+              )}
+            </div>
             <p className="text-gray-400 mt-1">
               Created {formatDate(video.createdAt)}
               {video.duration && ` • ${formatDuration(video.duration)}`}
@@ -208,6 +228,21 @@ export default function VideoModal({ video, isOpen, onClose }: VideoModalProps) 
                 <Wand2 size={18} />
                 Fix & Regenerate
               </Link>
+              {onToggleOutro && (
+                <button
+                  onClick={handleToggleOutro}
+                  disabled={!video.videoUrl || video.status !== 'completed' || isTogglingOutro}
+                  title="Appends to the end of every other completed video for this account"
+                  className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                    video.isOutro
+                      ? 'bg-orange-500/20 text-orange-400 hover:bg-orange-500/30'
+                      : 'bg-gray-800 hover:bg-gray-700 text-white'
+                  }`}
+                >
+                  <Star size={18} fill={video.isOutro ? 'currentColor' : 'none'} />
+                  {isTogglingOutro ? 'Updating...' : video.isOutro ? 'Remove as outro' : 'Set as outro'}
+                </button>
+              )}
               <button
                 onClick={handleShare}
                 disabled={!video.videoUrl}
