@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Camera, X } from 'lucide-react'
+import AppNav from '@/components/AppNav'
 
 type SubjectPhoto = {
   id: string
@@ -138,9 +139,12 @@ export default function SubjectDetailPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
-      <Link href="/subjects" className="text-sm text-orange-400 hover:text-orange-300">
-        ← Back to subjects
-      </Link>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link href="/subjects" className="text-sm text-orange-400 hover:text-orange-300">
+          ← Back to subjects
+        </Link>
+        <AppNav current="/subjects" />
+      </div>
 
       <Card className="mt-4">
         <CardHeader>

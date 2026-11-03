@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import UsageBadge from '@/components/UsageBadge'
+import AppNav from '@/components/AppNav'
 
 type VideoStatusResponse = {
   id: string
@@ -33,6 +34,8 @@ export default function GeneratePage() {
   const [aspectRatio, setAspectRatio] = useState('16:9')
   const [duration, setDuration] = useState('8')
   const [generateAudio, setGenerateAudio] = useState(true)
+  const [outroVideo, setOutroVideo] = useState<{ id: string; title: string } | null>(null)
+  const [appendOutro, setAppendOutro] = useState(true)
   const [subjects, setSubjects] = useState<SubjectSummary[]>([])
   const [subjectId, setSubjectId] = useState<string>('none')
   const [referenceImage, setReferenceImage] = useState<File | null>(null)
@@ -48,6 +51,13 @@ export default function GeneratePage() {
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => setSubjects(Array.isArray(data) ? data : []))
       .catch(() => setSubjects([]))
+  }, [])
+
+  useEffect(() => {
+    fetch('/api/videos/outro')
+      .then((res) => (res.ok ? res.json() : { outro: null }))
+      .then((data) => setOutroVideo(data.outro || null))
+      .catch(() => setOutroVideo(null))
   }, [])
 
   useEffect(() => {
@@ -116,6 +126,7 @@ export default function GeneratePage() {
       formData.append('aspectRatio', aspectRatio)
       formData.append('duration', duration)
       formData.append('generateAudio', String(generateAudio))
+      formData.append('appendOutro', String(appendOutro))
       if (subjectId !== 'none') formData.append('subjectId', subjectId)
       if (referenceImage) formData.append('referenceImage', referenceImage)
 
@@ -155,17 +166,7 @@ export default function GeneratePage() {
             </div>
             <div className="flex flex-col items-end gap-2">
               <UsageBadge />
-              <div className="flex gap-3">
-                <Link href="/gallery" className="text-sm text-orange-400 hover:text-orange-300 whitespace-nowrap">
-                  Gallery
-                </Link>
-                <Link href="/subjects" className="text-sm text-orange-400 hover:text-orange-300 whitespace-nowrap">
-                  Manage subjects
-                </Link>
-                <Link href="/automations" className="text-sm text-orange-400 hover:text-orange-300 whitespace-nowrap">
-                  Automations
-                </Link>
-              </div>
+              <AppNav current="/generate" />
             </div>
           </div>
         </CardHeader>
@@ -274,6 +275,21 @@ export default function GeneratePage() {
                 Generate audio (dialogue, narration, ambient sound described in your prompt)
               </Label>
             </div>
+
+            {outroVideo && (
+              <div className="flex items-center gap-2">
+                <input
+                  id="appendOutro"
+                  type="checkbox"
+                  checked={appendOutro}
+                  onChange={(e) => setAppendOutro(e.target.checked)}
+                  className="h-4 w-4 rounded border-input accent-orange-500"
+                />
+                <Label htmlFor="appendOutro" className="cursor-pointer">
+                  Append outro (&quot;{outroVideo.title}&quot;) to the end of this video
+                </Label>
+              </div>
+            )}
 
             <Button type="submit" disabled={loading || !prompt.trim()} className="w-full">
               {loading ? 'Generating...' : isFixMode ? 'Regenerate Video' : 'Generate Video'}

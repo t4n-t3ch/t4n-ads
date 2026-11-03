@@ -84,6 +84,7 @@ export async function GET(request: NextRequest) {
           status: VideoStatus.PROCESSING,
           progress: 0,
           subjectId: automation.subjectId,
+          appendOutro: automation.appendOutro,
         },
       });
 

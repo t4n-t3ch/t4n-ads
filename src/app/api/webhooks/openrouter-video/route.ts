@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
         // Append the account's chosen outro clip, if any - but never to the
         // outro video itself, and never let a concat failure block delivery
         // of the plain generated video.
-        if (!video.isOutro) {
+        if (!video.isOutro && video.appendOutro) {
           try {
             const outro = await prisma.video.findFirst({
               where: { userId: video.userId, isOutro: true, videoUrl: { not: null } },

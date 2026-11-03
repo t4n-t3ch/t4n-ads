@@ -37,6 +37,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
     if (typeof body.name === 'string' && body.name.trim()) data.name = body.name.trim();
     if (typeof body.enabled === 'boolean') data.enabled = body.enabled;
+    if (typeof body.appendOutro === 'boolean') data.appendOutro = body.appendOutro;
     if (typeof body.promptTemplate === 'string') data.promptTemplate = body.promptTemplate.trim() || null;
     if (typeof body.styleGoal === 'string') data.styleGoal = body.styleGoal.trim() || null;
     if (typeof body.aspectRatio === 'string') data.aspectRatio = body.aspectRatio;

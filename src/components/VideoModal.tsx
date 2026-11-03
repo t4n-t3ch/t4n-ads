@@ -87,10 +87,11 @@ export default function VideoModal({ video, isOpen, onClose, onToggleOutro }: Vi
   if (!isOpen || !video) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="relative w-full max-w-4xl bg-gray-900 rounded-2xl shadow-2xl overflow-hidden border border-gray-800">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-sm">
+      <div className="flex min-h-full items-center justify-center p-4">
+      <div className="relative w-full max-w-4xl max-h-[85vh] flex flex-col bg-gray-900 rounded-2xl shadow-2xl overflow-hidden border border-gray-800">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-800">
+        <div className="flex items-center justify-between p-6 border-b border-gray-800 shrink-0">
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-2xl font-bold text-white">{video.title || 'Untitled Video'}</h2>
@@ -115,7 +116,8 @@ export default function VideoModal({ video, isOpen, onClose, onToggleOutro }: Vi
           </button>
         </div>
 
-        {/* Video Player */}
+        {/* Scrollable body: video player + metadata */}
+        <div className="overflow-y-auto">
         <div className="p-6">
           <div className="relative bg-black rounded-xl overflow-hidden aspect-video">
             {video.videoUrl ? (
@@ -212,9 +214,10 @@ export default function VideoModal({ video, isOpen, onClose, onToggleOutro }: Vi
             </div>
           </div>
         </div>
+        </div>
 
         {/* Actions */}
-        <div className="p-6 border-t border-gray-800 bg-gray-900/50">
+        <div className="p-6 border-t border-gray-800 bg-gray-900/50 shrink-0">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-gray-400">
               <ExternalLink size={16} />
@@ -262,6 +265,7 @@ export default function VideoModal({ video, isOpen, onClose, onToggleOutro }: Vi
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   )

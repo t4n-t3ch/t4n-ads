@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
     const templateId = formData.get('templateId') as string | null;
     const subjectId = formData.get('subjectId') as string | null;
     const generateAudio = formData.get('generateAudio') !== 'false';
+    const appendOutro = formData.get('appendOutro') !== 'false';
     const referenceImage = formData.get('referenceImage') as File | null;
 
     if (!prompt || prompt.trim().length < 3) {
@@ -97,6 +98,7 @@ export async function POST(request: NextRequest) {
         progress: 0,
         templateId: templateId || null,
         subjectId: subjectId || null,
+        appendOutro,
       },
     });
 

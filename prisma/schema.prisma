@@ -71,6 +71,7 @@ model Video {
   subject       Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
   costCents     Int?      // actual OpenRouter cost for this generation, in US cents
   isOutro       Boolean   @default(false) // appended to the end of every other completed video for this user
+  appendOutro   Boolean   @default(true)  // whether THIS video should have the account's outro appended
 
   @@map("videos")
   @@schema("app")
@@ -171,6 +172,7 @@ model Automation {
   aspectRatio    String   @default("16:9")
   duration       Int      @default(8)
   enabled        Boolean  @default(true)
+  appendOutro    Boolean  @default(true) // whether runs of this automation get the account's outro appended
   // "YYYY-MM-DD" (UTC) of the last run, so the daily cron tick doesn't
   // generate twice for the same day.
   lastRunDate    String?

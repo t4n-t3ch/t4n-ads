@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import AppNav from '@/components/AppNav'
 
 type Subject = {
   id: string
@@ -76,9 +77,7 @@ export default function SubjectsPage() {
             when generating so the AI reuses that context automatically.
           </p>
         </div>
-        <Link href="/generate" className="text-sm text-orange-400 hover:text-orange-300 whitespace-nowrap">
-          Back to generate
-        </Link>
+        <AppNav current="/subjects" />
       </div>
 
       <Card className="mb-8">

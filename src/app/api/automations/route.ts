@@ -61,6 +61,7 @@ export async function POST(request: NextRequest) {
     const styleGoal = (body.styleGoal || '').trim();
     const aspectRatio = body.aspectRatio || '16:9';
     const duration = Number(body.duration) || 8;
+    const appendOutro = body.appendOutro !== false;
     const daysOfWeek = parseDaysOfWeek(body.daysOfWeek);
 
     if (!name) {
@@ -102,6 +103,7 @@ export async function POST(request: NextRequest) {
         daysOfWeek,
         aspectRatio,
         duration,
+        appendOutro,
       },
     });
 

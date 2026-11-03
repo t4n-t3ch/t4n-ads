@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import AppNav from '@/components/AppNav'
 
 type SubjectSummary = {
   id: string
@@ -45,6 +46,8 @@ export default function AutomationsPage() {
   const [days, setDays] = useState<number[]>([1, 4]) // Mon + Thu by default
   const [aspectRatio, setAspectRatio] = useState('16:9')
   const [duration, setDuration] = useState('8')
+  const [outroVideo, setOutroVideo] = useState<{ id: string; title: string } | null>(null)
+  const [appendOutro, setAppendOutro] = useState(true)
   const [creating, setCreating] = useState(false)
 
   const load = () => {
@@ -63,6 +66,13 @@ export default function AutomationsPage() {
 
   useEffect(() => {
     load()
+  }, [])
+
+  useEffect(() => {
+    fetch('/api/videos/outro')
+      .then((res) => (res.ok ? res.json() : { outro: null }))
+      .then((data) => setOutroVideo(data.outro || null))
+      .catch(() => setOutroVideo(null))
   }, [])
 
   const toggleDay = (d: number) => {
@@ -97,6 +107,7 @@ export default function AutomationsPage() {
           daysOfWeek: days,
           aspectRatio,
           duration: Number(duration),
+          appendOutro,
         }),
       })
       const data = await res.json()
@@ -140,9 +151,7 @@ export default function AutomationsPage() {
             Results land in the gallery like any other video.
           </p>
         </div>
-        <Link href="/generate" className="text-sm text-orange-400 hover:text-orange-300 whitespace-nowrap">
-          Back to generate
-        </Link>
+        <AppNav current="/automations" />
       </div>
 
       <Card className="mb-8">
@@ -281,6 +290,21 @@ export default function AutomationsPage() {
                 </Select>
               </div>
             </div>
+
+            {outroVideo && (
+              <div className="flex items-center gap-2">
+                <input
+                  id="appendOutro"
+                  type="checkbox"
+                  checked={appendOutro}
+                  onChange={(e) => setAppendOutro(e.target.checked)}
+                  className="h-4 w-4 rounded border-input accent-orange-500"
+                />
+                <Label htmlFor="appendOutro" className="cursor-pointer">
+                  Append outro (&quot;{outroVideo.title}&quot;) to each run
+                </Label>
+              </div>
+            )}
 
             {error && <p className="text-sm text-red-400">{error}</p>}
             <Button type="submit" disabled={creating || !name.trim() || !subjectId}>
