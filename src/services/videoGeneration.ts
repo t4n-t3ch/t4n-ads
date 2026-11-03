@@ -119,7 +119,9 @@ export async function submitVideoGeneration(
   }
 
   if (options.referenceImageUrls?.length) {
-    body.input_references = options.referenceImageUrls.slice(0, 4).map((url) => ({
+    // Veo 3.1 hard-caps reference-to-video at 3 images, and expects them to
+    // cohere into one subject - exceeding the cap is rejected outright.
+    body.input_references = options.referenceImageUrls.slice(0, 3).map((url) => ({
       type: 'image_url',
       image_url: { url },
     }))

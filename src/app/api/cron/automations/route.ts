@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
 
       const referenceImageUrls = pickRandom(
         automation.subject.photos.map((p) => p.url),
-        4
+        3
       );
 
       await prisma.user.upsert({

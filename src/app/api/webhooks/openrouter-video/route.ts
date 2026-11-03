@@ -1,7 +1,17 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { submitVideoGeneration } from "@/services/videoGeneration";
 import { VideoStatus } from "@/types";
+
+// Veo rejects a reference-image set it can't reconcile into one consistent
+// subject (e.g. a logo + unrelated screenshots). Automations pick reference
+// photos at random from a subject's whole archive, so this is expected to
+// happen sometimes - retry once, prompt-only, rather than leaving a
+// scheduled run silently failed.
+function isReferenceMixError(message: string | undefined): boolean {
+  return !!message && /reference/i.test(message);
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -90,6 +100,60 @@ export async function POST(request: NextRequest) {
         },
       });
     } else if (type === "video.generation.failed" || type === "video.generation.cancelled" || type === "video.generation.expired") {
+      const metadata = (video.metadata as { referenceRetryAttempted?: boolean } | null) || {};
+
+      if (
+        type === "video.generation.failed" &&
+        isReferenceMixError(data.error) &&
+        !metadata.referenceRetryAttempted &&
+        video.prompt
+      ) {
+        const subject = video.subjectId
+          ? await prisma.subject.findUnique({ where: { id: video.subjectId }, select: { description: true } })
+          : null;
+
+        const forwardedHost = request.headers.get("x-forwarded-host") || request.headers.get("host");
+        const forwardedProto = request.headers.get("x-forwarded-proto") || request.nextUrl.protocol.replace(":", "");
+        const origin = forwardedHost ? `${forwardedProto}://${forwardedHost}` : request.nextUrl.origin;
+        const callbackUrl = `${origin}/api/webhooks/openrouter-video`;
+
+        const retry = await submitVideoGeneration(
+          {
+            prompt: video.prompt,
+            aspectRatio: (video.aspectRatio as "16:9" | "9:16" | "1:1") || "16:9",
+            duration: video.duration || 8,
+            generateAudio: true,
+            subjectContext: subject?.description || undefined,
+            // No referenceImageUrls this time - that's the whole point of the retry.
+          },
+          callbackUrl
+        );
+
+        if (retry.success && retry.jobId) {
+          await prisma.video.update({
+            where: { id: video.id },
+            data: {
+              jobId: retry.jobId,
+              status: VideoStatus.PROCESSING,
+              progress: 0,
+              error: null,
+              metadata: { referenceRetryAttempted: true },
+            },
+          });
+          return NextResponse.json({ ok: true, retried: true });
+        }
+
+        await prisma.video.update({
+          where: { id: video.id },
+          data: {
+            status: VideoStatus.FAILED,
+            error: `${data.error} (retry without references also failed: ${retry.error})`,
+            metadata: { referenceRetryAttempted: true },
+          },
+        });
+        return NextResponse.json({ ok: true });
+      }
+
       await prisma.video.update({
         where: { id: video.id },
         data: {
